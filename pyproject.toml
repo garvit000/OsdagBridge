@@ -5,102 +5,87 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "osdagbridge"
 version = "0.1.0"
-description = "OsdagBridge - Shared core for analysis and design of steel bridges (CLI, Desktop, Web)"
+description = "OsdagBridge - Bridge design and analysis software"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = { file = "LICENSE.txt" }
 authors = [
-  { name = "Osdag", email = "contact-osdag@efossee.in" }
+  { name = "Osdag", email = "contact-osdag@fossee.in" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12,<3.13"
 
 keywords = ["bridge", "steel", "structural engineering", "analysis", "IRC", "IS 800", "Osdag"]
 
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",  # ← Fixed to LGPL
   "Operating System :: OS Independent",
   "Intended Audience :: Science/Research",
   "Intended Audience :: Education",
   "Topic :: Scientific/Engineering",
 ]
 
-# ------------------------------
-# Core runtime dependencies
-# ------------------------------
 dependencies = [
-  "numpy>=1.21",
+  "numpy>=1.21,<2.0",
   "scipy>=1.8",
   "pyyaml>=6.0",
   "pydantic>=2.0",
   "matplotlib>=3.5",
+  "PySide6>=6.4",
+  "fiona>=1.8",
+  "shapely>=2.0",
+  "ospgrillage>=0.1",
+  "openseespy>=3.4",
 ]
 
-# ------------------------------
-# Optional extras
-# ------------------------------
 [project.optional-dependencies]
-# Advanced analysis engines
-opensees = ["openseespy>=3.5"]
-ospgrillage = ["ospgrillage>=1.1"]
-
-# CAD / Geometry (optional heavy dependency)
 cad = ["pythonocc-core>=7.6.0"]
-
-# Report generation
 report = ["pylatex>=1.4"]
+dev = ["pytest", "pytest-cov", "ruff", "mypy"]
 
-# Web backend (Django + DRF)
-web-backend = [
-  "Django>=4.2",
-  "djangorestframework>=3.14"
-]
+[project.scripts]
+osdag_bridge = "osdagbridge.desktop.__main__:main"
 
-# Web frontend dev tools (not required for backend runtime)
-web-frontend = [
-  "nodejs-bin>=18.0",     # Optional if you want version-pinning
-]
-
-# Developer tools
-dev = [
-  "pytest",
-  "pytest-cov",
-  "ruff",
-  "mypy",
-]
-
-# ------------------------------
-# setuptools config
-# ------------------------------
 [tool.setuptools]
 package-dir = { "" = "src" }
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests*", "examples*"]
 
-[tool.setuptools.dynamic]
-readme = { file = "README.md" }
-
-# ------------------------------
-# Tools: Ruff, Black, Mypy, Pytest
-# ------------------------------
+[tool.setuptools.package-data]
+osdagbridge = [
+    "core/data/project_location/shapefiles/*.shp",
+    "core/data/project_location/shapefiles/*.shx",
+    "core/data/project_location/shapefiles/*.dbf",
+    "core/data/project_location/shapefiles/*.prj",
+    "core/data/project_location/shapefiles/*.cpg",
+    "core/data/project_location/shapefiles/*.qmd",
+    "core/data/project_location/*.db",
+    "core/data/project_location/*.sql",
+    "core/data/project_location/*.png",
+    "core/data/project_location/*.xlsx",
+    "core/data/ResourceFiles/*.sql",
+    "core/data/ResourceFiles/*.sqlite",
+    "core/data/ResourceFiles/*.awk",
+    "core/reports/templates/*.tex",
+    "desktop/resources/*.qrc",
+    "desktop/resources/themes/*.qss",
+    "desktop/resources/vectors/*.svg",
+    "desktop/ui/resources/html/*.html",
+]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py312"
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 ignore_missing_imports = true
 strict = false
 
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q"
-testpaths = [
-  "tests"
-]
-
-
+testpaths = ["tests"]
