@@ -1,4 +1,9 @@
 import sys
+from osdagbridge.desktop.OS_safety_protocols import setup_environment, ensure_safe_startup
+
+setup_environment()
+ensure_safe_startup()
+
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QFile, QTextStream
 from osdagbridge.desktop.resources import resources_rc
