@@ -2,14 +2,13 @@
 import math
 import json
 from pathlib import Path
-from functools import lru_cache
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRect, QRectF, QUrl
-from PySide6.QtGui import QPainter, QPixmap, QImage, QBrush, QColor, QPen, QMouseEvent, QWheelEvent, QPainterPath
-from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkDiskCache, QNetworkReply
+from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRectF
+from PySide6.QtGui import QPainter, QPixmap, QBrush, QColor, QPen, QMouseEvent, QWheelEvent, QPainterPath
 
 # Path to zone overlay images
 _DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "core" / "data" / "project_location"
+INDIA_MAP_IMAGE = _DATA_DIR / "india_map.png"
 SEISMIC_ZONE_IMAGE = _DATA_DIR / "seismic.png"
 WIND_ZONE_IMAGE = _DATA_DIR / "wind.png"
 
@@ -24,8 +23,9 @@ INDIA_BOUNDS = {
 
 class NativeMapWidget(QWidget):
     """
-    A native tile-based map widget that fetches OpenStreetMap tiles 
-    and renders them using QPainter. this avoids QWebEngineView dependency.
+    A native map widget that renders a local India map image using QPainter.
+    It keeps the existing coordinate projection so map clicks, panning, zooming,
+    and weather/zone lookups continue to use latitude and longitude.
     """
     locationSelected = Signal(float, float)  # Emits (lat, lon) on click
 
@@ -46,17 +46,9 @@ class NativeMapWidget(QWidget):
         
         # Tile size
         self.tile_size = 256
-        
-        # Network Manager for fetching tiles
-        self.manager = QNetworkAccessManager(self)
-        self.cache = QNetworkDiskCache(self)
-        self.cache.setCacheDirectory("osdag_map_cache")
-        self.cache.setMaximumCacheSize(50 * 1024 * 1024) # 50 MB
-        self.manager.setCache(self.cache)
-        
-        # In-memory image cache (url -> QPixmap)
-        self.pixmap_cache = {}
-        self._pending_tile_requests = set()
+
+        # Local raster map used instead of remote map tiles.
+        self._base_map_pixmap = QPixmap(str(INDIA_MAP_IMAGE))
 
         # GeoJSON boundary overlay cache
         self._geojson_shapes = []  # list[tuple[list[(lon, lat)], closed]]
@@ -86,31 +78,12 @@ class NativeMapWidget(QWidget):
         # 1. Calculate center pixel in world coordinates
         center_px_x, center_px_y = self.lat_lon_to_pixel(self.latitude, self.longitude, self.zoom)
         
-        # 2. Determine visible tile range
-        # Top-left of the viewport in world pixels
+        # 2. Determine the top-left of the viewport in world pixels.
         view_x = center_px_x - width / 2
         view_y = center_px_y - height / 2
-        
-        start_col = math.floor(view_x / self.tile_size)
-        end_col = math.floor((view_x + width) / self.tile_size)
-        start_row = math.floor(view_y / self.tile_size)
-        end_row = math.floor((view_y + height) / self.tile_size)
-        
-        total_tiles = 2 ** self.zoom
-        
-        # 3. Draw Tiles
-        for col in range(start_col, end_col + 1):
-            for row in range(start_row, end_row + 1):
-                # Handle wrapping for x (longitude)
-                tile_x = col % total_tiles
-                tile_y = row
-                
-                # Check bounds for y (latitude doesn't wrap typically for Mercator)
-                if tile_y < 0 or tile_y >= total_tiles:
-                    continue
-                
-                # Logic to draw the specific tile
-                self.draw_tile(painter, tile_x, tile_y, col, row, view_x, view_y)
+
+        # 3. Draw the local map raster.
+        self.draw_base_map(painter, view_x, view_y)
 
         # 3.5. Draw zone overlay if active
         if self._overlay_type != "none" and self._overlay_pixmap:
@@ -141,49 +114,34 @@ class NativeMapWidget(QWidget):
 
         painter.end()
 
-    def draw_tile(self, painter, tile_x, tile_y, col, row, view_x, view_y):
-        base_url = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{self.zoom}/{tile_y}/{tile_x}"
-        labels_url = f"https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{self.zoom}/{tile_y}/{tile_x}"
-        
-        # Calculate screen position
-        screen_x = (col * self.tile_size) - view_x
-        screen_y = (row * self.tile_size) - view_y
-        
-        if base_url in self.pixmap_cache:
-            painter.drawPixmap(int(screen_x), int(screen_y), self.pixmap_cache[base_url])
-        else:
-            # Draw placeholder
-            painter.setBrush(QColor(240, 240, 240))
-            painter.drawRect(int(screen_x), int(screen_y), self.tile_size, self.tile_size)
-            self.fetch_tile(base_url)
+    def draw_base_map(self, painter: QPainter, view_x: float, view_y: float):
+        """Draw the bundled India map image aligned to the configured India bounds."""
+        painter.fillRect(self.rect(), QColor("#000000"))
 
-        if labels_url in self.pixmap_cache:
-            painter.drawPixmap(int(screen_x), int(screen_y), self.pixmap_cache[labels_url])
-        else:
-            self.fetch_tile(labels_url)
-
-    def fetch_tile(self, url):
-        if url in self.pixmap_cache or url in self._pending_tile_requests:
+        if self._base_map_pixmap.isNull():
+            painter.setPen(QColor("#666666"))
+            painter.drawText(self.rect(), Qt.AlignCenter, "India map image not found")
             return
 
-        request = QNetworkRequest(QUrl(url))
-        request.setAttribute(QNetworkRequest.CacheLoadControlAttribute, QNetworkRequest.PreferCache)
-        # Identify user agent as polite usage policy requires
-        request.setHeader(QNetworkRequest.UserAgentHeader, "OsdagBridge/1.0 (Garvit)")
+        target_rect = self._india_bounds_screen_rect(view_x, view_y)
+        source_rect = QRectF(self._base_map_pixmap.rect())
+        painter.drawPixmap(target_rect, self._base_map_pixmap, source_rect)
 
-        self._pending_tile_requests.add(url)
-        reply = self.manager.get(request)
-        reply.finished.connect(lambda: self.on_tile_loaded(reply, url))
+    def _india_bounds_screen_rect(self, view_x: float, view_y: float) -> QRectF:
+        """Return the screen rectangle occupied by India's geographic bounds."""
+        nw_px_x, nw_px_y = self.lat_lon_to_pixel(
+            INDIA_BOUNDS["north"], INDIA_BOUNDS["west"], self.zoom
+        )
+        se_px_x, se_px_y = self.lat_lon_to_pixel(
+            INDIA_BOUNDS["south"], INDIA_BOUNDS["east"], self.zoom
+        )
 
-    def on_tile_loaded(self, reply, url):
-        self._pending_tile_requests.discard(url)
-        if reply.error() == QNetworkReply.NoError:
-            data = reply.readAll()
-            pixmap = QPixmap()
-            pixmap.loadFromData(data)
-            self.pixmap_cache[url] = pixmap
-            self.update() # Trigger repaint
-        reply.deleteLater()
+        return QRectF(
+            nw_px_x - view_x,
+            nw_px_y - view_y,
+            se_px_x - nw_px_x,
+            se_px_y - nw_px_y,
+        )
 
     def load_geojson(self, path):
         """Load GeoJSON boundaries (FeatureCollection) for rendering."""
@@ -320,7 +278,6 @@ class NativeMapWidget(QWidget):
     def set_zoom(self, new_zoom):
         if new_zoom != self.zoom:
             self.zoom = new_zoom
-            self.pixmap_cache.clear() # Clear cache on zoom change for simplicity or manage better
             self.update()
 
     def pan_map(self, dx_px, dy_px):
@@ -380,12 +337,6 @@ class NativeMapWidget(QWidget):
         self.marker_lon = lon
         self.latitude = lat
         self.longitude = lon
-        
-        # Center the view on the new location
-        if self.pixmap_cache:
-            # Optionally clear cache or just let it fetch new tiles
-            # self.pixmap_cache.clear() 
-            pass
             
         self.locationSelected.emit(lat, lon) # Optional: emit signal if we want uniform behavior, 
                                              # but beware of infinite loops if connected to inputs!
@@ -420,35 +371,20 @@ class NativeMapWidget(QWidget):
         """
         if not self._overlay_pixmap or self._overlay_pixmap.isNull():
             return
-        
-        # Calculate screen position for India's bounding box
-        # Top-left corner (north-west)
-        nw_px_x, nw_px_y = self.lat_lon_to_pixel(
-            INDIA_BOUNDS["north"], INDIA_BOUNDS["west"], self.zoom
-        )
-        # Bottom-right corner (south-east)
-        se_px_x, se_px_y = self.lat_lon_to_pixel(
-            INDIA_BOUNDS["south"], INDIA_BOUNDS["east"], self.zoom
-        )
-        
-        # Convert world pixels to screen pixels
-        screen_x = nw_px_x - view_x
-        screen_y = nw_px_y - view_y
-        screen_width = se_px_x - nw_px_x
-        screen_height = se_px_y - nw_px_y
+
+        target_rect = self._india_bounds_screen_rect(view_x, view_y)
         
         # Skip drawing if completely outside viewport
-        if (screen_x + screen_width < 0 or screen_x > self.width() or
-            screen_y + screen_height < 0 or screen_y > self.height()):
+        if (target_rect.right() < 0 or target_rect.left() > self.width() or
+            target_rect.bottom() < 0 or target_rect.top() > self.height()):
             return
         
         # Set opacity
         painter.setOpacity(self._overlay_opacity)
         
         # Draw scaled overlay
-        target_rect = QRectF(screen_x, screen_y, screen_width, screen_height)
         source_rect = QRectF(self._overlay_pixmap.rect())
-        painter.drawPixmap(target_rect.toRect(), self._overlay_pixmap, source_rect.toRect())
+        painter.drawPixmap(target_rect, self._overlay_pixmap, source_rect)
         
         # Reset opacity
         painter.setOpacity(1.0)

@@ -392,11 +392,14 @@ class ProjectLocationDialog(QDialog):
 
         self.zone_overlay_combo = NoScrollComboBox()
         self.zone_overlay_combo.addItems(["None", "Seismic Zone", "Wind Zone"])
+        apply_field_style(self.zone_overlay_combo)
+        self.zone_overlay_combo.setFixedWidth(150)
 
         controls_row = QHBoxLayout()
         controls_row.setContentsMargins(8, 4, 8, 0)
         controls_row.setSpacing(10)
         controls_row.addWidget(QLabel("Map Options:"))
+        controls_row.addWidget(self.zone_overlay_combo)
 
         self.boundary_overlay_checkbox = QCheckBox("Show India boundary overlay")
         self.boundary_overlay_checkbox.setChecked(True)
