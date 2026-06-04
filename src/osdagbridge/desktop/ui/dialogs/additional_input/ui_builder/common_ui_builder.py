@@ -187,6 +187,12 @@ class UIBuilder(QWidget):
 
         # ── Normal card with grid ──────────────────────────────────────────
         card, card_layout = self._create_section_card(section.get("title", ""))
+        bind_container = section.get("bind_container")
+        if bind_container:
+            setattr(self.owner, bind_container, card)
+        object_name = section.get("object_name")
+        if object_name:
+            card.setObjectName(object_name)
         self._build_grid(section, card_layout)
         parent_layout.addWidget(card)
 
@@ -282,7 +288,19 @@ class UIBuilder(QWidget):
                 elif ftype == TYPE_DIRECT_WIDGET:
                     field = self._create_field(field_def)
                     field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-                    field.setMinimumSize(200, 200)
+                    min_width = field_def.get("min_width", 200)
+                    min_height = field_def.get("min_height", 200)
+                    if min_width is not None or min_height is not None:
+                        field.setMinimumSize(
+                            int(min_width or 0),
+                            int(min_height or 0),
+                        )
+                    fixed_width = field_def.get("fixed_width")
+                    fixed_height = field_def.get("fixed_height")
+                    if fixed_width is not None:
+                        field.setFixedWidth(int(fixed_width))
+                    if fixed_height is not None:
+                        field.setFixedHeight(int(fixed_height))
                     grid.addWidget(field, row_idx, col, 1, 2)
                     col += 2
                 elif ftype == TYPE_LOAD_COMBINATION:
@@ -349,6 +367,7 @@ class UIBuilder(QWidget):
             field = QComboBox()
             choices = field_def.get("choices") or []
             field.addItems(choices)
+            default = field_def.get("default")
             field.setSizeAdjustPolicy(QComboBox.AdjustToContents)
             field.setMinimumContentsLength(max((len(c) for c in choices), default=0))
 
@@ -370,7 +389,6 @@ class UIBuilder(QWidget):
             label_text  = "" if label_first else field_def.get("label", "")
             field = QCheckBox(label_text)
             field.setObjectName(field_def.get("id", ""))
-            field.setChecked(field_def.get("default_checked", False))
             field.setStyleSheet("QCheckBox { font-size: 11px; color: #333; spacing: 6px; }")
             bind_name = field_def.get("bind")
             if bind_name:
@@ -449,8 +467,13 @@ class UIBuilder(QWidget):
 
         elif ftype == TYPE_DIRECT_WIDGET:
             widget_class = field_def.get("widget_class")
-            widget = widget_class()
+            widget_args = field_def.get("widget_args") or []
+            widget_kwargs = field_def.get("widget_kwargs") or {}
+            widget = widget_class(*widget_args, **widget_kwargs)
             widget.setObjectName(field_def.get("id"))
+            bind_name = field_def.get("bind")
+            if bind_name:
+                setattr(owner, bind_name, widget)
             return widget
 
         elif ftype == TYPE_MODE_LINE:

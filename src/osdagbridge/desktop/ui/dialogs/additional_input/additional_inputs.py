@@ -602,7 +602,7 @@ class AdditionalInputs(QDialog):
         self.tabs.addTab(self.typical_section_tab, "Typical Section Details")
         
         # Sub-Tab 2: Member Properties
-        self.section_properties_tab = SectionPropertiesTab()
+        self.section_properties_tab = SectionPropertiesTab(additional_input_instance=self)
         self.tabs.addTab(self.section_properties_tab, "Member Properties")
         self.section_properties_tab.set_editable_mode(self._member_properties_editable)
 
@@ -1021,9 +1021,9 @@ class AdditionalInputs(QDialog):
 
         # ---- Cross bracing spacing (Section Properties tab) ----
         try:
-            bracing_tab = self.section_properties_tab.cross_bracing_details_tab
-            if hasattr(bracing_tab, "bracing_spacing") and bracing_tab.bracing_spacing.text():
-                values[KEY_MP_CB_SPACING] = float(bracing_tab.bracing_spacing.text())
+            bracing_tab = self.section_properties_tab.cross_bracing_tab
+            if hasattr(bracing_tab, "spacing_input") and bracing_tab.spacing_input.text():
+                values[KEY_MP_CB_SPACING] = float(bracing_tab.spacing_input.text())
             
         except Exception:
             pass

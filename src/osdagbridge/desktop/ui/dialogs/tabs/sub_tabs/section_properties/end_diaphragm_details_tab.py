@@ -24,7 +24,7 @@ from osdagbridge.desktop.ui.dialogs.tabs.common import apply_field_style
 from osdagbridge.desktop.ui.utils.rolled_section_preview import RolledSectionPreview
 from osdagbridge.desktop.ui.widgets.section_viewer import SectionCatalog, SectionPreviewWidget
 from osdagbridge.desktop.ui.widgets.placeholder_section_preview import PlaceholderSectionPreviewWidget
-from .cross_bracing_details_tab import BracingLayoutCadWidget
+from osdagbridge.desktop.ui.dialogs.additional_input.drawings.cross_bracing_details_cad import BracingLayoutCadWidget
 from osdagbridge.core.bridge_types.plate_girder.ui_fields_additional_input import END_DIAPHRAGM_DETAILS_SCHEMA
 
 # Reuse the same rolled section catalog that backs the Girder tab.

@@ -622,18 +622,29 @@ KEY_MP_STIFFENER_BEARING_THICKNESS_MODE       = "member_properties.stiffener_det
 
 
 # Member Properties - Cross Bracing Details (dynamic keys, mirrors KEY_MP_GIRDER_* pattern)
+KEY_MP_CB_TAB                         = "member_properties.cross_bracing_details.tab"
 KEY_MP_CB_SELECT_GIRDERS              = "member_properties.cross_bracing_details.select_girders"
 KEY_MP_CB_MEMBER_ID                   = "member_properties.cross_bracing_details.member_id"
+KEY_MP_CB_COUNT                       = "member_properties.cross_bracing_details.count"
+KEY_MP_CB_SPACING                     = "member_properties.cross_bracing_details.spacing"
 KEY_MP_CB_TYPE                        = "member_properties.cross_bracing_details.type"
+KEY_MP_CB_CONNECTION_TYPE             = "member_properties.cross_bracing_details.connection_type"
+KEY_MP_CB_SECTION_TYPE                = "member_properties.cross_bracing_details.section_type"
+KEY_MP_CB_SECTION_DESIGNATION         = "member_properties.cross_bracing_details.section_designation"
 KEY_MP_CB_BRACING_SECTION_TYPE        = "member_properties.cross_bracing_details.bracing_section_type"
 KEY_MP_CB_BRACING_SECTION_DESIGNATION = "member_properties.cross_bracing_details.bracing_section_designation"
 KEY_MP_CB_TOP_CHORD                   = "member_properties.cross_bracing_details.top_chord"
+KEY_MP_CB_TOP_CHORD_ENABLED           = "member_properties.cross_bracing_details.top_chord_enabled"
 KEY_MP_CB_TOP_CHORD_SECTION_TYPE      = "member_properties.cross_bracing_details.top_chord_section_type"
 KEY_MP_CB_TOP_CHORD_SECTION_DESIG     = "member_properties.cross_bracing_details.top_chord_section_designation"
 KEY_MP_CB_BOTTOM_CHORD                = "member_properties.cross_bracing_details.bottom_chord"
+KEY_MP_CB_BOTTOM_CHORD_ENABLED        = "member_properties.cross_bracing_details.bottom_chord_enabled"
 KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE   = "member_properties.cross_bracing_details.bottom_chord_section_type"
 KEY_MP_CB_BOTTOM_CHORD_SECTION_DESIG  = "member_properties.cross_bracing_details.bottom_chord_section_designation"
-KEY_MP_CB_SPACING                     = "member_properties.cross_bracing_details.spacing"
+KEY_MP_CB_LAYOUT_CAD                  = "member_properties.cross_bracing_details.layout_cad"
+KEY_MP_CB_SECTION_PREVIEW_CAD         = "member_properties.cross_bracing_details.section_preview_cad"
+KEY_MP_CB_TOP_CHORD_PREVIEW_CAD       = "member_properties.cross_bracing_details.top_chord_preview_cad"
+KEY_MP_CB_BOTTOM_CHORD_PREVIEW_CAD    = "member_properties.cross_bracing_details.bottom_chord_preview_cad"
 
 
 # Member Properties - End Diaphragm Details (dynamic keys, mirrors KEY_MP_CB_* pattern)
@@ -797,6 +808,7 @@ VALUES_CROSS_BRACING_TYPE = [
     "X-bracing with bottom bracket",
     "X-bracing with top and bottom brackets",
 ]
+VALUES_CROSS_BRACING_CONNECTION_TYPE = ["Bolted", "Welded"]
 VALUES_END_DIAPHRAGM_TYPE = ["Cross Bracing", "Rolled Beam", "Welded Beam"]
 VALUES_WEARING_COAT_MATERIAL = ["Concrete", "Bituminous", "Other"]
 VALUES_RAILING_TYPE = ["IRC 5 - RCC Railing", "IRC 5 - Steel Railing", "Custom"]
