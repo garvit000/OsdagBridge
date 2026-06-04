@@ -763,7 +763,6 @@ CROSS_BRACING_DETAILS_SCHEMA = {
                     "id": KEY_MP_CB_COUNT,
                     "label": "No. of Cross Bracing:",
                     "type": TYPE_TEXTBOX,
-                    "default": "",
                     "validator": {"type": "int_range", "bottom": 1, "top": 1000},
                     "bind": "no_of_cross_bracing_input",
                     "on_text_changed": "_on_count_changed",
@@ -794,7 +793,6 @@ CROSS_BRACING_DETAILS_SCHEMA = {
                     "type": TYPE_COMBOBOX,
                     "choices": VALUES_CROSS_BRACING_CONNECTION_TYPE,
                     "bind": "connection_type_combo",
-                    "default": "Bolted",
                 }]},
                 {"fields": [{
                     "id": KEY_MP_CB_SECTION_TYPE,
@@ -820,7 +818,6 @@ CROSS_BRACING_DETAILS_SCHEMA = {
                     "label": "Top Chord:",
                     "type": TYPE_CHECKBOX,
                     "bind": "top_chord_checkbox",
-                    "default": False,
                 }]},
                 {"fields": [{
                     "id": KEY_MP_CB_TOP_CHORD_SECTION_TYPE,
@@ -846,7 +843,6 @@ CROSS_BRACING_DETAILS_SCHEMA = {
                     "label": "Bottom Chord:",
                     "type": TYPE_CHECKBOX,
                     "bind": "bottom_chord_checkbox",
-                    "default": True,
                 }]},
                 {"fields": [{
                     "id": KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE,
@@ -871,7 +867,6 @@ CROSS_BRACING_DETAILS_SCHEMA = {
                     "id": KEY_MP_CB_SPACING,
                     "label": "Spacing (m):",
                     "type": TYPE_TEXTBOX,
-                    "default": "",
                     "read_only": True,
                     "validator": {"type": "double_range", "bottom": 0.01, "top": 100000.0, "decimals": 2},
                     "bind": "spacing_input",
