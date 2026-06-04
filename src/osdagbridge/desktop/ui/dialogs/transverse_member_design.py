@@ -421,7 +421,7 @@ class TransverseMemberDesign(QDialog):
         diagram_height = schema.get("height")
 
         try:
-            from osdagbridge.desktop.ui.dialogs.tabs.sub_tabs.section_properties.cross_bracing_details_tab import (
+            from osdagbridge.desktop.ui.dialogs.additional_input.drawings.cross_bracing_details_cad import (
                 BracingLayoutCadWidget,
             )
             self.bracing_layout_widget = BracingLayoutCadWidget(diagram_height)

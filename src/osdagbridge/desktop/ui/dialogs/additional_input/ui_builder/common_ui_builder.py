@@ -404,6 +404,17 @@ class UIBuilder(QWidget):
 
         # ── Normal card with grid ──────────────────────────────────────────
         card, card_layout = self._create_section_card(section.get("title", ""))
+        object_name = section.get("object_name")
+        if object_name:
+            card.setObjectName(object_name)
+            # Border for card with object_name
+            card.setStyleSheet(f"""
+                QFrame#{object_name} {{
+                    background-color: white;
+                    border: 1px solid #b2b2b2;
+                    border-radius: 8px;
+                }}
+            """)
         self._build_grid(section, card_layout)
         parent_layout.addWidget(card)
 
@@ -498,7 +509,20 @@ class UIBuilder(QWidget):
                     col += 2
                 elif ftype == TYPE_DIRECT_WIDGET:
                     field = self._create_field(field_def)
-                    field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+                    field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                    min_width = field_def.get("min_width", 200)
+                    min_height = field_def.get("min_height", 200)
+                    if min_width is not None or min_height is not None:
+                        field.setMinimumSize(
+                            int(min_width or 0),
+                            int(min_height or 0),
+                        )
+                    fixed_width = field_def.get("fixed_width")
+                    fixed_height = field_def.get("fixed_height")
+                    if fixed_width is not None:
+                        field.setFixedWidth(int(fixed_width))
+                    if fixed_height is not None:
+                        field.setFixedHeight(int(fixed_height))
                     grid.addWidget(field, row_idx, col, 1, 2)
                     col += 2
                 elif ftype == TYPE_LOAD_COMBINATION:
@@ -689,11 +713,14 @@ class UIBuilder(QWidget):
             return widget
 
         elif ftype == TYPE_DIRECT_WIDGET:
-            cls = field_def.get("widget_class")
-            if cls is None:
-                return QWidget()
- 
-            widget = cls(parent=owner)
+            widget_class = field_def.get("widget_class")
+            widget_args = field_def.get("widget_args") or []
+            widget_kwargs = field_def.get("widget_kwargs") or {}
+            widget = widget_class(*widget_args, **widget_kwargs)
+            widget.setObjectName(field_def.get("id"))
+            bind_name = field_def.get("bind")
+            if bind_name:
+                setattr(owner, bind_name, widget)
             field_id = str(field_def.get("id", ""))
             if field_id:
                 widget.setObjectName(field_id)

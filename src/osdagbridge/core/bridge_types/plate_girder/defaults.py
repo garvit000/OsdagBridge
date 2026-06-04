@@ -1,7 +1,7 @@
 """Centralized defaults for Plate Girder Bridge."""
 
 from __future__ import annotations
-
+import math
 
 from osdagbridge.core.utils.codes.irc5_2015 import IRC5_2015
 from osdagbridge.core.utils.codes.keyfile import (
@@ -52,6 +52,7 @@ from osdagbridge.core.utils.common import (
 
     KEY_MP_CB_SELECT_GIRDERS,
     KEY_MP_CB_MEMBER_ID,
+    KEY_MP_CB_COUNT,
     KEY_MP_CB_TYPE,
     KEY_MP_CB_BRACING_SECTION_TYPE,
     KEY_MP_CB_BRACING_SECTION_DESIGNATION,
@@ -599,6 +600,22 @@ def _on_no_of_girders_changed(working_input_dict: dict) -> None:
     for k in stale_cb_keys:
         del working_input_dict[k]
 
+    # --- Cross bracing count default: derived from spacing = span / (n + 1) ---
+    # Default spacing is DEFAULT_CROSS_BRACING_SPACING (3.0 m), so n = span/3 - 1.
+    # Only set when not already present (preserves user edits on subsequent calls).
+    try:
+        _cb_span = float(working_input_dict.get(KEY_SPAN) or 0)
+        _cb_spacing = DEFAULT_CROSS_BRACING_SPACING  # 3.0 m
+
+    # spacing = span / (n + 1)
+        _cb_count = max(1, math.floor(_cb_span / _cb_spacing) - 1)
+
+    except (ValueError, TypeError):
+        _cb_count = 1
+        _cb_spacing = DEFAULT_CROSS_BRACING_SPACING
+
+    working_input_dict[KEY_MP_CB_COUNT] = _cb_count
+
     # --- Cross Bracing props map: (KEY_MP_CB_* constant, default value) ---
 
     MP_CB_PROPS = [
@@ -628,6 +645,8 @@ def _on_no_of_girders_changed(working_input_dict: dict) -> None:
                     value = f"G{girder_idx} to G{girder_idx + 1}"
                 elif defaults_key == "member_id":
                     value = f"B{girder_idx}M1 to B{girder_idx}M{no_of_cb_members}"
+                elif defaults_key == "spacing":
+                    value = DEFAULT_CROSS_BRACING_SPACING
                 else:
                     value = CROSS_BRACING_DEFAULTS[defaults_key]
                 working_input_dict[f"{base_key}{suffix}"] = value

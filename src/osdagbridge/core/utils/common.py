@@ -340,6 +340,7 @@ KEY_MP_GIRDER_IS_SECTION              = "member_properties.girder_details.sectio
 KEY_MP_GIRDER_TORSIONAL_RESTRAINT     = "member_properties.girder_details.section_input.torsional_restraint"
 KEY_MP_GIRDER_WARPING_RESTRAINT       = "member_properties.girder_details.section_input.warping_restraint"
 KEY_MP_GIRDER_WEB_TYPE                = "member_properties.girder_details.section_input.web_type"
+KEY_MP_GIRDER_WEB_DEPTH = "member_properties.girder_details.section_input.web_depth"
 
 KEY_MP_GD_MEMBER_ID                      = "member_properties.girder_details.member_id"
 KEY_MP_GD_APPLY_EXTERIOR                 = "member_properties.girder_details.apply_exterior"
@@ -360,14 +361,85 @@ KEY_MP_GIRDER_PLASTIC_MODULUS_ZUY = "member_properties.girder_details.material_p
 KEY_MP_GIRDER_TORSION_CONSTANT_IT = "member_properties.girder_details.section_properties.torsion_constant_it"
 KEY_MP_GIRDER_WARPING_CONSTANT_IW = "member_properties.girder_details.section_properties.warping_constant_iw"
 
+#-------------- Stiffener Details Sub-Tab --------------------------------------------
 
+KEY_MP_SD_TAB                          = "member_properties.stiffener_details"
+KEY_MP_STIFFENER_SELECT_MEMBER_ID             = "member_properties.stiffener_details.select_member_id" # Dropdown to select member ID for stiffener details
+KEY_MP_STIFFENER_NO_BEARING_STIFFENERS        = "member_properties.stiffener_details.no_bearing_stiffeners_each_end" # Number of bearing stiffeners at each end of the girder
+KEY_MP_STIFFENER_SPACING                      = "member_properties.stiffener_details.bearing_stiffener_spacing" # Spacing of bearing stiffeners
+KEY_MP_STIFFENER_BEARING_THICKNESS            = "member_properties.stiffener_details.bearing_stiffener_plate_thickness" # Thickness of bearing stiffener plate
+KEY_MP_STIFFENER_BEARING_OUTSTAND             = "member_properties.stiffener_details.bearing_stiffener_outstand" # Outstand of bearing stiffener from face of web
+KEY_MP_STIFFENER_INTERMEDIATE                 = "member_properties.stiffener_details.intermediate_stiffener" # Whether intermediate stiffeners are provided or not
+KEY_MP_STIFFENER_INTERMEDIATE_SPACING         = "member_properties.stiffener_details.intermediate_stiffener_spacing" # Spacing of intermediate stiffeners
+KEY_MP_STIFFENER_INTERMEDIATE_THICKNESS       = "member_properties.stiffener_details.intermediate_stiffener_thickness" # Thickness of intermediate stiffener plate
+KEY_MP_STIFFENER_INTERMEDIATE_OUTSTAND        = "member_properties.stiffener_details.intermediate_stiffener_outstand" # Outstand of intermediate stiffener from face of web
+KEY_MP_STIFFENER_LONGITUDINAL                 = "member_properties.stiffener_details.longitudinal_stiffener" # Whether longitudinal stiffeners are provided or not
+KEY_MP_STIFFENER_LONGITUDINAL_THICKNESS       = "member_properties.stiffener_details.longitudinal_stiffener_thickness" # Thickness of longitudinal stiffener plate
+KEY_MP_STIFFENER_DESIGN_METHOD                = "member_properties.stiffener_details.design_method" # Design method for stiffeners (IS800:2007 or IS800:2022)
+KEY_SD_SHEAR_BUCKLING_METHOD        = "member_properties.stiffener_details.shear_buckling_method"
+
+#-------------- Cross Bracing Sub-Tab --------------------------------------------
+
+KEY_MP_CB_TAB                         = "member_properties.cross_bracing_details"
+KEY_MP_CB_SELECT_GIRDERS              = "member_properties.cross_bracing_details.select_girders"
+KEY_MP_CB_MEMBER_ID                   = "member_properties.cross_bracing_details.member_id"
+KEY_MP_CB_COUNT                       = "member_properties.cross_bracing_details.count"
+KEY_MP_CB_SPACING                     = "member_properties.cross_bracing_details.spacing"
+KEY_MP_CB_TYPE                        = "member_properties.cross_bracing_details.type"
+KEY_MP_CB_CONNECTION_TYPE             = "member_properties.cross_bracing_details.connection_type"
+KEY_MP_CB_SECTION_TYPE                = "member_properties.cross_bracing_details.section_type"
+KEY_MP_CB_SECTION_DESIGNATION         = "member_properties.cross_bracing_details.section_designation"
+KEY_MP_CB_BRACING_SECTION_TYPE        = "member_properties.cross_bracing_details.bracing_section_type"
+KEY_MP_CB_BRACING_SECTION_DESIGNATION = "member_properties.cross_bracing_details.bracing_section_designation"
+KEY_MP_CB_TOP_CHORD                   = "member_properties.cross_bracing_details.top_chord"
+KEY_MP_CB_TOP_CHORD_ENABLED           = "member_properties.cross_bracing_details.top_chord_enabled"
+KEY_MP_CB_TOP_CHORD_SECTION_TYPE      = "member_properties.cross_bracing_details.top_chord_section_type"
+KEY_MP_CB_TOP_CHORD_SECTION_DESIG     = "member_properties.cross_bracing_details.top_chord_section_designation"
+KEY_MP_CB_BOTTOM_CHORD                = "member_properties.cross_bracing_details.bottom_chord"
+KEY_MP_CB_BOTTOM_CHORD_ENABLED        = "member_properties.cross_bracing_details.bottom_chord_enabled"
+KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE   = "member_properties.cross_bracing_details.bottom_chord_section_type"
+KEY_MP_CB_BOTTOM_CHORD_SECTION_DESIG  = "member_properties.cross_bracing_details.bottom_chord_section_designation"
+KEY_MP_CB_LAYOUT_CAD                  = "member_properties.cross_bracing_details.layout_cad"
+KEY_MP_CB_SECTION_PREVIEW_CAD         = "member_properties.cross_bracing_details.section_preview_cad"
+KEY_MP_CB_TOP_CHORD_PREVIEW_CAD       = "member_properties.cross_bracing_details.top_chord_preview_cad"
+KEY_MP_CB_BOTTOM_CHORD_PREVIEW_CAD    = "member_properties.cross_bracing_details.bottom_chord_preview_cad"
 
 # Stiffener inputs
 KEY_SD_STIFFENER_DETAILS            = "member_properties.stiffener_details.stiffener_details_cad"
 
-# Web buckling inputs
-KEY_SD_SHEAR_BUCKLING_METHOD        = "member_properties.stiffener_details.shear_buckling_method"
+#-------------- End DIaphragm Sub-Tab --------------------------------------------
 
+KEY_MP_ED_TAB                          = "member_properties.end_diaphragm_details"
+KEY_MP_ED_SELECT_GIRDERS              = "member_properties.end_diaphragm_details.select_girders" # Girder selection for end diaphragm details (select girder pair)
+KEY_MP_ED_MEMBER_ID                   = "member_properties.end_diaphragm_details.member_id" # Member ID field (auto-populated based on selected girders)
+KEY_MP_ED_TYPE                        = "member_properties.end_diaphragm_details.type" # End diaphragm type combo box (corss bracing, rolled, welded)
+KEY_MP_ED_BRACING_TYPE                = "member_properties.end_diaphragm_details.bracing_type" # Bracing type combo box (K or X bracing) - only visible if end diaphragm type is cross bracing
+KEY_MP_ED_BRACING_SECTION             = "member_properties.end_diaphragm_details.bracing_section" # Bracing section combo box - only visible if end diaphragm type is cross bracing
+KEY_MP_ED_BRACING_SECTION_DESIGNATION = "member_properties.end_diaphragm_details.bracing_section_designation" # Bracing section designation combo box - only visible if end diaphragm type is cross bracing and bracing section type is selected
+KEY_MP_ED_TOP_CHORD                   = "member_properties.end_diaphragm_details.top_chord" # Whether top chord is provided or not for end diaphragm - only visible if end diaphragm type is cross bracing
+KEY_MP_ED_TOP_CHORD_SECTION_TYPE      = "member_properties.end_diaphragm_details.top_chord_section_type" # Top chord section type combo box - only visible if end diaphragm type is cross bracing and top chord is provided
+KEY_MP_ED_TOP_CHORD_SECTION_DESIG     = "member_properties.end_diaphragm_details.top_chord_section_designation" # Top chord section designation combo box - only visible if end diaphragm type is cross bracing, top chord is provided and top chord section type is selected
+KEY_MP_ED_BOTTOM_CHORD                = "member_properties.end_diaphragm_details.bottom_chord" # Whether bottom chord is provided or not for end diaphragm - only visible if end diaphragm type is cross bracing
+KEY_MP_ED_BOTTOM_CHORD_SECTION_TYPE   = "member_properties.end_diaphragm_details.bottom_chord_section_type" # Bottom chord section type combo box - only visible if end diaphragm type is cross bracing and bottom chord is provided
+KEY_MP_ED_BOTTOM_CHORD_SECTION_DESIG  = "member_properties.end_diaphragm_details.bottom_chord_section_designation" #Bottom chord section designation combo box - only visible if end diaphragm type is cross bracing, bottom chord is provided and bottom chord section type is selected
+KEY_MP_ED_SYMMETRY                    = "member_properties.end_diaphragm_details.symmetry" # Symmetry combo box (symmetric/asymmetric) for end diaphragm - only visible if end diaphragm type is welded
+KEY_MP_ED_TOTAL_DEPTH                   = "member_properties.end_diaphragm_details.total_depth" # Total depth of end diaphragm for welded type - only visible if end diaphragm type is welded
+KEY_MP_ED_WEB_THICKNESS              = "member_properties.end_diaphragm_details.web_thickness" # Web thickness of end diaphragm for welded type - only visible if end diaphragm type is welded
+KEY_MP_ED_TOP_FLANGE_WIDTH              = "member_properties.end_diaphragm_details.top_flange_width" # Top flange width of end diaphragm for welded type - only visible if end diaphragm type is welded
+KEY_MP_ED_BOTTOM_FLANGE_WIDTH           = "member_properties.end_diaphragm_details.bottom_flange_width" # Bottom flange width of end diaphragm for welded type - only visible if end diaphragm type is welded
+KEY_MP_ED_TOP_FLANGE_THICKNESS          = "member_properties.end_diaphragm_details.top_flange_thickness" # Top flange thickness of end diaphragm for welded type - only visible if end diaphragm type is welded
+KEY_MP_ED_BOTTOM_FLANGE_THICKNESS       = "member_properties.end_diaphragm_details.bottom_flange_thickness" # Bottom flange thickness of end diaphragm for welded type - only visible if end diaphragm type is welded
+KEY_MP_ED_IS_SECTION                   = "member_properties.end_diaphragm_details.is_section" # IS section designation for end diaphragm when end diaphragm type is rolled - only visible if end diaphragm type is rolled
+KEY_MP_ED_MASS                       = "member_properties.end_diaphragm_details.section_properties.mass" # Section mass per unit length for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_SECTIONAL_AREA             = "member_properties.end_diaphragm_details.section_properties.area" # Sectional area for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_SECTIONAL_IY             = "member_properties.end_diaphragm_details.section_properties.iy" # Moment of inertia about y-axis for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_SECTIONAL_IZ             = "member_properties.end_diaphragm_details.section_properties.iz" # Moment of inertia about z-axis for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_RADIUS_GYRATION_Y       = "member_properties.end_diaphragm_details.section_properties.radius_gyration_y" # Radius of gyration about y-axis for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_RADIUS_GYRATION_Z       = "member_properties.end_diaphragm_details.section_properties.radius_gyration_z" # Radius of gyration about z-axis for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_ELASTIC_MODULUS_ZZ     = "member_properties.end_diaphragm_details.material_properties.elastic_modulus_zz" # Elastic modulus in strong axis direction for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_ELASTIC_MODULUS_ZY     = "member_properties.end_diaphragm_details.material_properties.elastic_modulus_zy" # Elastic modulus in weak axis direction for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_PLASTIC_MODULUS_ZUZ    = "member_properties.end_diaphragm_details.material_properties.plastic_modulus_zuz" # Plastic modulus in strong axis direction for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
+KEY_MP_ED_PLASTIC_MODULUS_ZUY    = "member_properties.end_diaphragm_details.material_properties.plastic_modulus_zuy" # Plastic modulus in weak axis direction for end diaphragm for welded or rolled type - only visible if end diaphragm type is welded or rolled
 
 
 #══════════════MEMBER-PROPERTIES-TAB-KEY-ENDS═══════════════════════════════════════════════════════
@@ -854,6 +926,7 @@ VALUES_CROSS_BRACING_TYPE = [
     "X-bracing with bottom bracket",
     "X-bracing with top and bottom brackets",
 ]
+VALUES_CROSS_BRACING_CONNECTION_TYPE = ["Bolted", "Welded"]
 VALUES_END_DIAPHRAGM_TYPE = ["Cross Bracing", "Rolled Beam", "Welded Beam"]
 VALUES_WEARING_COAT_MATERIAL = ["Concrete", "Bituminous", "Other"]
 VALUES_RAILING_TYPE = ["IRC 5 - RCC Railing", "IRC 5 - Steel Railing", "Custom"]

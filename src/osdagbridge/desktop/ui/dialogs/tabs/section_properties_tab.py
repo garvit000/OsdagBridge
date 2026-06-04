@@ -1,15 +1,12 @@
 """Section Properties tab — four sub-tabs for Member Properties."""
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFrame, QTabWidget,
+    QWidget, QVBoxLayout, QFrame, QTabWidget
 )
-from PySide6.QtCore import Qt
 
 from osdagbridge.core.utils.common import *
 from osdagbridge.desktop.ui.dialogs.additional_input.ui_builder.common_ui_builder import UIBuilder
-
-from osdagbridge.desktop.ui.dialogs.tabs.sub_tabs.section_properties.stiffener_details_tab   import StiffenerDetailsTab
-from osdagbridge.desktop.ui.dialogs.tabs.sub_tabs.section_properties.cross_bracing_details_tab import CrossBracingDetailsTab
 from osdagbridge.desktop.ui.dialogs.tabs.sub_tabs.section_properties.end_diaphragm_details_tab import EndDiaphragmDetailsTab
+
 
 
 class SectionPropertiesTab(QWidget):
@@ -69,26 +66,42 @@ class SectionPropertiesTab(QWidget):
             with_scroll=True,
         )
 
-        # ── Tabs 3-4: unchanged specialist tabs ───────────────────────────────
-        self.cross_bracing_tab     = CrossBracingDetailsTab()
+        from osdagbridge.core.bridge_types.plate_girder.ui_fields_additional_input import CROSS_BRACING_DETAILS_SCHEMA
+        self.cross_bracing_tab = UIBuilder(
+            owner=self.additional_input_instance,
+            schema=CROSS_BRACING_DETAILS_SCHEMA,
+            card_title="",
+            main_widget_object_name="cross_bracing.details.main",
+            additional_input_instance=self.additional_input_instance,
+            with_scroll=True,
+        )
+        self.additional_input_instance.init_cb_state()
+        if hasattr(self.additional_input_instance, "_populate_designations"):
+            self.additional_input_instance._populate_designations()
+        if hasattr(self.additional_input_instance, "cb_refresh_girder_options"):
+            self.additional_input_instance.cb_refresh_girder_options()
+        if hasattr(self.additional_input_instance, "_load_state_for_current_member"):
+            self.additional_input_instance._load_state_for_current_member()
+
         self.end_diaphragm_tab     = EndDiaphragmDetailsTab()
 
-        self.section_tabs.addTab(self.girder_details_tab,     "Girder Details")
+        self.section_tabs.addTab(self.girder_details_tab,        "Girder Details")
         self.section_tabs.addTab(self.stiffener_details_tab,  "Stiffener Details")
-        self.section_tabs.addTab(self.cross_bracing_tab,      "Cross-Bracing Details")
-        self.section_tabs.addTab(self.end_diaphragm_tab,      "End Diaphragm Details")
+        self.section_tabs.addTab(self.cross_bracing_tab,          "Cross-Bracing Details")
+        self.section_tabs.addTab(self.end_diaphragm_tab,          "End Diaphragm Details")
         self._last_section_tab_index = self.section_tabs.currentIndex()
 
         content_layout.addWidget(self.section_tabs)
         main_layout.addWidget(content_frame)
 
-        # Cross-tab bindings
+        # Bind stiffener tab to girder tab for member list + optimized state.
         try:
             self.stiffener_details_tab.bind_girder_details_tab(self.girder_details_tab)
         except Exception:
             pass
         try:
-            self.cross_bracing_tab.bind_girder_details_tab(self.girder_details_tab)
+            if hasattr(self.additional_input_instance, "bind_girder_details_tab"):
+                self.additional_input_instance.bind_girder_details_tab(self.girder_details_tab)
         except Exception:
             pass
         try:
@@ -96,9 +109,36 @@ class SectionPropertiesTab(QWidget):
         except Exception:
             pass
 
-        self.section_tabs.currentChanged.connect(self._on_section_tab_changed)
+        # Refresh stiffener members whenever a tab becomes active.
+        try:
+            self.section_tabs.currentChanged.connect(self._on_section_tab_changed)
+        except Exception:
+            pass
 
-    # ── tab-switch handler ────────────────────────────────────────────────────
+
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._update_lock_overlay_geometry()
+
+    def _update_lock_overlay_geometry(self):
+        return
+
+    def set_design_mode(self, mode_str: str) -> None:
+        if hasattr(self, "girder_details_tab") and hasattr(self.girder_details_tab, "set_design_mode"):
+            self.girder_details_tab.set_design_mode(mode_str)
+        if hasattr(self.additional_input_instance, "cb_set_design_mode"):
+            self.additional_input_instance.cb_set_design_mode(mode_str)
+        if hasattr(self, "end_diaphragm_tab") and hasattr(self.end_diaphragm_tab, "set_design_mode"):
+            self.end_diaphragm_tab.set_design_mode(mode_str)
+
+    def has_unsaved_changes(self) -> bool:
+        try:
+            if hasattr(self, "girder_details_tab") and hasattr(self.girder_details_tab, "has_unsaved_changes"):
+                return bool(self.girder_details_tab.has_unsaved_changes())
+        except Exception:
+            pass
+        return False
 
     def _on_section_tab_changed(self, index: int) -> None:
         previous = getattr(self, "_last_section_tab_index", 0)
@@ -121,7 +161,7 @@ class SectionPropertiesTab(QWidget):
                 pass
         elif widget is self.cross_bracing_tab:
             try:
-                self.cross_bracing_tab.refresh_girder_options()
+                self.additional_input_instance.cb_refresh_girder_options()
             except Exception:
                 pass
         elif widget is self.end_diaphragm_tab:
@@ -135,27 +175,28 @@ class SectionPropertiesTab(QWidget):
     def set_editable_mode(self, editable: bool) -> None:
         pass
 
-    def has_unsaved_changes(self) -> bool:
-        try:
-            if hasattr(self.girder_details_tab, "has_unsaved_changes"):
-                return bool(self.girder_details_tab.has_unsaved_changes())
-        except Exception:
-            pass
-        return False
-
     def set_girder_count(self, count) -> None:
+        try:
+            total = int(count) if count is not None else 2
+        except (TypeError, ValueError):
+            total = 2
+        girders = [f"G{i}" for i in range(1, max(2, total) + 1)]
+        self.girder_details_tab.available_girders = girders
+
         if hasattr(self.girder_details_tab, "set_girder_count"):
             try:
                 self.girder_details_tab.set_girder_count(count)
             except Exception:
                 pass
-        for tab in (self.stiffener_details_tab, self.cross_bracing_tab, self.end_diaphragm_tab):
+        for tab in (self.stiffener_details_tab, self.end_diaphragm_tab):
             for method in ("refresh_girder_members", "refresh_girder_options"):
                 if hasattr(tab, method):
                     try:
                         getattr(tab, method)()
                     except Exception:
                         pass
+        if hasattr(self.additional_input_instance, "cb_refresh_girder_options"):
+             self.additional_input_instance.cb_refresh_girder_options()
 
     def reset_defaults(self) -> None:
         if hasattr(self.girder_details_tab, "reset_defaults"):
@@ -163,7 +204,7 @@ class SectionPropertiesTab(QWidget):
                 self.girder_details_tab.reset_defaults()
             except Exception:
                 pass
-        for tab in (self.stiffener_details_tab, self.cross_bracing_tab, self.end_diaphragm_tab):
+        for tab in (self.stiffener_details_tab, self.end_diaphragm_tab):
             for method in ("refresh_girder_members", "refresh_girder_options"):
                 if hasattr(tab, method):
                     try:
@@ -175,12 +216,15 @@ class SectionPropertiesTab(QWidget):
                     tab.reset_defaults()
                 except Exception:
                     pass
+        if hasattr(self.additional_input_instance, "cb_reset_defaults"):
+            self.additional_input_instance.cb_reset_defaults()
         try:
             self.section_tabs.setCurrentIndex(0)
         except Exception:
             pass
 
     def reset_active_tab_defaults(self) -> None:
+        """Reset only the currently active Member Properties sub-tab."""
         try:
             active = self.section_tabs.currentWidget()
         except Exception:
@@ -203,7 +247,7 @@ class SectionPropertiesTab(QWidget):
                 pass
         elif active is self.cross_bracing_tab:
             try:
-                self.cross_bracing_tab.refresh_girder_options()
+                self.additional_input_instance.cb_refresh_girder_options()
             except Exception:
                 pass
         elif active is self.end_diaphragm_tab:
@@ -217,23 +261,26 @@ class SectionPropertiesTab(QWidget):
                 active.reset_defaults()
             except Exception:
                 pass
+        
+        if active is self.cross_bracing_tab and hasattr(self.additional_input_instance, "cb_reset_defaults"):
+            self.additional_input_instance.cb_reset_defaults()
 
     def save_properties(self) -> dict:
         data = {}
-        for key, tab, method in [
+        for bind_key, handler, method_name in [
             ("girder_details",   self.girder_details_tab,    "collect_data"),
-            ("stiffener_details",self.stiffener_details_tab, "collect_data"),
-            ("cross_bracing",    self.cross_bracing_tab,     "collect_data"),
+            ("stiffener",        self.stiffener_details_tab, "collect_data"),
+            ("cross_bracing",    self.additional_input_instance,     "cb_collect_data"),
             ("end_diaphragm",    self.end_diaphragm_tab,     "collect_data"),
         ]:
-            if key == "stiffener_details" and hasattr(self.stiffener_details_tab, "validate"):
+            if bind_key == "stiffener" and hasattr(self.stiffener_details_tab, "validate"):
                 try:
                     self.stiffener_details_tab.validate()
                 except Exception:
                     pass
-            if hasattr(tab, method):
+            if hasattr(handler, method_name):
                 try:
-                    data[key] = getattr(tab, method)()
+                    data[bind_key] = getattr(handler, method_name)()
                 except Exception:
                     pass
         return data

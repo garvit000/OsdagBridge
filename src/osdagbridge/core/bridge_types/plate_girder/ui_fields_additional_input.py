@@ -2490,117 +2490,191 @@ STIFFENER_DETAILS_SCHEMA = {
     ],
 }
 
+from osdagbridge.desktop.ui.dialogs.additional_input.drawings.cross_bracing_details_cad import BracingLayoutCadWidget
+from osdagbridge.desktop.ui.widgets.section_viewer import SectionPreviewWidget
+
 CROSS_BRACING_DETAILS_SCHEMA = {
-    "id": "cross_bracing_details_tab",
-    "overview": [
+    "id": KEY_MP_CB_TAB,
+    "layout": {
+        "type": "columns",
+        "columns": 2,
+        "column_widths": [1, 1],
+    },
+    "sections": [
         {
-            "id": "select_girders",
-            "label": "Select Girders:",
-            "type": "combo_dynamic",
-            "bind": "select_girders_combo",
-        },
-        {
-            "id": "member_id",
-            "label": "Member ID:",
-            "type": "line",
-            "read_only": True,
-            "bind": "member_id_display",
-        },
-    ],
-    "section_inputs": [
-        {
-            "id": "design",
-            "label": "Design:",
-            "type": "combo",
-            "choices": VALUES_GIRDER_DESIGN_MODE,
-            "bind": "design_combo",
-            "default": "Optimized",
-        },
-        {
-            "id": "bracing_type",
-            "label": "Type of Bracing:",
-            "type": "combo",
-            "choices": ["K-Bracing", "X-Bracing"],
-            "bind": "bracing_type_combo",
-        },
-        {
-            "id": "bracing_section_type",
-            "label": "Bracing Section Type:",
-            "type": "combo",
-            "choices": [
-                "Angle",
-                "Double Angle (Long Leg)",
-                "Double Angle (Short Leg)",
-                "Channel",
-                "Double Channel",
+            "column": 0,
+            "title": "Overview",
+            "rows": [
+                {"fields": [{
+                    "id": KEY_MP_CB_SELECT_GIRDERS,
+                    "label": "Select Girders:",
+                    "type": TYPE_COMBOBOX,
+                    "on_change": "_on_select_girders_index_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_COUNT,
+                    "label": "No. of Cross Bracing:",
+                    "type": TYPE_TEXTBOX,
+                    "on_text_changed": "_on_count_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_MEMBER_ID,
+                    "label": "Member ID:",
+                    "type": TYPE_TEXTBOX,
+                    "read_only": True,
+                }]},
             ],
-            "bind": "bracing_section_type_combo",
         },
         {
-            "id": "bracing_section",
-            "label": "Bracing Section Designation:",
-            "type": "combo_dynamic",
-            "bind": "bracing_section_combo",
-        },
-        {
-            "id": "top_chord_enabled",
-            "label": "Top Chord:",
-            "type": "checkbox",
-            "bind": "top_chord_checkbox",
-            "default": False,
-        },
-        {
-            "id": "top_chord_type",
-            "label": "Top Chord Section Type:",
-            "type": "combo",
-            "choices": [
-                "Angle",
-                "Double Angle (Long Leg)",
-                "Double Angle (Short Leg)",
-                "Channel",
-                "Double Channel",
+            "column": 0,
+            "title": "Section Inputs",
+            "rows": [
+                {"fields": [{
+                    "id": KEY_MP_CB_TYPE,
+                    "label": "Type of Bracing:",
+                    "type": TYPE_COMBOBOX,
+                    "choices": ["K-Bracing", "X-Bracing"],
+                    "on_change": "_on_bracing_type_combo_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_CONNECTION_TYPE,
+                    "label": "Type of Connection:",
+                    "type": TYPE_COMBOBOX,
+                    "choices": VALUES_CROSS_BRACING_CONNECTION_TYPE,
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_SECTION_TYPE,
+                    "label": "Bracing Section Type:",
+                    "type": TYPE_COMBOBOX,
+                    "choices": [
+                        "Angle",
+                        "Double Angle (Long Leg)",
+                        "Double Angle (Short Leg)",
+                        "Channel",
+                        "Double Channel",
+                    ],
+                    "on_change": "_on_bracing_section_type_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_SECTION_DESIGNATION,
+                    "label": "Bracing Section Designation:",
+                    "type": TYPE_COMBOBOX,
+                    "on_change": "_update_previews",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_TOP_CHORD_ENABLED,
+                    "label": "Top Chord:",
+                    "type": TYPE_CHECKBOX,
+                    "on_change": "_on_bracing_layout_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_TOP_CHORD_SECTION_TYPE,
+                    "label": "Top Chord Section Type:",
+                    "type": TYPE_COMBOBOX,
+                    "choices": [
+                        "Angle",
+                        "Double Angle (Long Leg)",
+                        "Double Angle (Short Leg)",
+                        "Channel",
+                        "Double Channel",
+                    ],
+                    "on_change": "_on_top_chord_type_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_TOP_CHORD_SECTION_DESIG,
+                    "label": "Top Chord Section Designation:",
+                    "type": TYPE_COMBOBOX,
+                    "on_change": "_update_previews",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_BOTTOM_CHORD_ENABLED,
+                    "label": "Bottom Chord:",
+                    "type": TYPE_CHECKBOX,
+                    "on_change": "_on_bracing_layout_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE,
+                    "label": "Bottom Chord Section Type:",
+                    "type": TYPE_COMBOBOX,
+                    "choices": [
+                        "Angle",
+                        "Double Angle (Long Leg)",
+                        "Double Angle (Short Leg)",
+                        "Channel",
+                        "Double Channel",
+                    ],
+                    "on_change": "_on_bottom_chord_type_changed",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_BOTTOM_CHORD_SECTION_DESIG,
+                    "label": "Bottom Chord Section Designation:",
+                    "type": TYPE_COMBOBOX,
+                    "on_change": "_update_previews",
+                }]},
+                {"fields": [{
+                    "id": KEY_MP_CB_SPACING,
+                    "label": "Spacing (m):",
+                    "type": TYPE_TEXTBOX,
+                    "read_only": True,
+                }]},
             ],
-            "bind": "top_chord_type_combo",
         },
         {
-            "id": "top_chord_size",
-            "label": "Top Chord Section Designation:",
-            "type": "combo_dynamic",
-            "bind": "top_chord_size_combo",
-        },
-        {
-            "id": "bottom_chord_enabled",
-            "label": "Bottom Chord:",
-            "type": "checkbox",
-            "bind": "bottom_chord_checkbox",
-            "default": True,
-        },
-        {
-            "id": "bottom_chord_type",
-            "label": "Bottom Chord Section Type:",
-            "type": "combo",
-            "choices": [
-                "Angle",
-                "Double Angle (Long Leg)",
-                "Double Angle (Short Leg)",
-                "Channel",
-                "Double Channel",
+            "column": 1,
+            "title": "Type of Bracing",
+            "object_name": "bracing_layout_box",
+            "rows": [
+                {"fields": [{
+                    "id": KEY_MP_CB_LAYOUT_CAD,
+                    "type": TYPE_DIRECT_WIDGET,
+                    "widget_class": BracingLayoutCadWidget,
+                    "widget_kwargs": {"min_height": 170},
+                    "min_height": 170,
+                    "fixed_height": 170,
+                }]},
             ],
-            "bind": "bottom_chord_type_combo",
         },
         {
-            "id": "bottom_chord_size",
-            "label": "Bottom Chord Section Designation:",
-            "type": "combo_dynamic",
-            "bind": "bottom_chord_size_combo",
+            "column": 1,
+            "title": "Bracing",
+            "object_name": "bracing_preview_box",
+            "rows": [
+                {"fields": [{
+                    "id": KEY_MP_CB_SECTION_PREVIEW_CAD,
+                    "type": TYPE_DIRECT_WIDGET,
+                    "widget_class": SectionPreviewWidget,
+                    "min_height": 110,
+                    "fixed_height": 110,
+                }]},
+            ],
         },
         {
-            "id": "spacing",
-            "label": "Spacing (m):",
-            "type": "line",
-            "default": "3",
-            "validator": {"type": "double_range", "bottom": 0.01, "top": 100000.0, "decimals": 2},
-            "bind": "spacing_input",
+            "column": 1,
+            "title": "Top Chord",
+            "object_name": "top_chord_preview_box",
+            "rows": [
+                {"fields": [{
+                    "id": KEY_MP_CB_TOP_CHORD_PREVIEW_CAD,
+                    "type": TYPE_DIRECT_WIDGET,
+                    "widget_class": SectionPreviewWidget,
+                    "min_height": 110,
+                    "fixed_height": 110,
+                }]},
+            ],
+        },
+        {
+            "column": 1,
+            "title": "Bottom Chord",
+            "object_name": "bottom_chord_preview_box",
+            "rows": [
+                {"fields": [{
+                    "id": KEY_MP_CB_BOTTOM_CHORD_PREVIEW_CAD,
+                    "type": TYPE_DIRECT_WIDGET,
+                    "widget_class": SectionPreviewWidget,
+                    "min_height": 110,
+                    "fixed_height": 110,
+                }]},
+            ],
         },
     ],
 }
@@ -2768,35 +2842,6 @@ END_DIAPHRAGM_DETAILS_SCHEMA = {
 # Versioned contract for schema-driven Member Properties migration.
 # This keeps existing schema constants intact while providing a single
 # top-level structure that builders can consume incrementally.
-MEMBER_PROPERTIES_SCHEMA_V1 = {
-    "version": 1,
-    "tabs": {
-        "girder_details": {
-            "id": "girder_details",
-            "title": "Girder Details",
-            "overview": GIRDER_DETAILS_SCHEMA.get("overview", []),
-            "section_inputs": GIRDER_DETAILS_SCHEMA.get("section_inputs", []),
-        },
-        "stiffener_details": {
-            "id": "stiffener_details",
-            "title": "Stiffener Details",
-            "overview": STIFFENER_DETAILS_SCHEMA.get("overview", []),
-            "stiffener_inputs": STIFFENER_DETAILS_SCHEMA.get("stiffener_inputs", []),
-            "web_buckling_inputs": STIFFENER_DETAILS_SCHEMA.get("web_buckling_inputs", []),
-        },
-        "cross_bracing_details": {
-            "id": "cross_bracing_details",
-            "title": "Cross-Bracing Details",
-            "overview": CROSS_BRACING_DETAILS_SCHEMA.get("overview", []),
-            "section_inputs": CROSS_BRACING_DETAILS_SCHEMA.get("section_inputs", []),
-        },
-        "end_diaphragm_details": {
-            "id": "end_diaphragm_details",
-            "title": "End Diaphragm Details",
-            "views": END_DIAPHRAGM_DETAILS_SCHEMA.get("views", {}),
-        },
-    },
-}
 
 # Transverse Member Design Dialog Schema
 
