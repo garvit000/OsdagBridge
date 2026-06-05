@@ -88,6 +88,12 @@ class AdditionalInputs(QDialog):
         # self.typical_section_tab.apply_current_selection_defaults()
         self.default_input_dict.update(self.working_input_dict)
 
+        # Push the actual girder count from the loaded dict into the
+        # cross-bracing (and end-diaphragm) select-girder combos.
+        # This must run after set_defaults() so working_input_dict is populated.
+        self._sync_member_properties_girder_count()
+
+
     def set_defaults(self) -> None:
         """
         Central function to populate all widgets in the dialog from working_input_dict.
@@ -773,12 +779,36 @@ class AdditionalInputs(QDialog):
     def _sync_member_properties_girder_count(self) -> None:
         """Push current girder count from Typical Section to Member Properties."""
         try:
-            count_text = ""
-            if hasattr(self, "typical_section_tab") and hasattr(self.typical_section_tab, "no_of_girders"):
-                count_text = str(self.typical_section_tab.no_of_girders.text() or "").strip()
-            if not count_text:
+            count = None
+
+            # Most reliable at any point during init: working_input_dict is
+            # fully populated before init_ui() runs.
+            raw = (self.working_input_dict or {}).get(KEY_TS_NO_OF_GIRDERS)
+            if raw is not None:
+                try:
+                    count = int(float(raw))
+                except (TypeError, ValueError):
+                    count = None
+
+            # Fallback: read from the widget (works reliably after layout solver
+            # has called setText, e.g. when called from get_all_values at runtime).
+            if not count:
+                for src in [self, getattr(self, "typical_section_tab", None)]:
+                    if src is None:
+                        continue
+                    widget = getattr(src, "no_of_girders", None)
+                    if widget is None:
+                        continue
+                    text = str(getattr(widget, "text", lambda: "")() or "").strip()
+                    if text:
+                        try:
+                            count = int(float(text))
+                        except (TypeError, ValueError):
+                            pass
+                        break
+
+            if not count or count <= 0:
                 return
-            count = int(float(count_text))
             if hasattr(self, "section_properties_tab") and hasattr(self.section_properties_tab, "set_girder_count"):
                 self.section_properties_tab.set_girder_count(count)
         except Exception:
@@ -1022,11 +1052,12 @@ class AdditionalInputs(QDialog):
         # ---- Cross bracing spacing (Section Properties tab) ----
         try:
             bracing_tab = self.section_properties_tab.cross_bracing_tab
-            if hasattr(bracing_tab, "spacing_input") and bracing_tab.spacing_input.text():
-                values[KEY_MP_CB_SPACING] = float(bracing_tab.spacing_input.text())
-            
+            spacing_w = bracing_tab._spacing_input
+            if spacing_w is not None and spacing_w.text():
+                values[KEY_MP_CB_SPACING] = float(spacing_w.text())
         except Exception:
             pass
+
 
         # Keep Member Properties member/pair dropdowns aligned with restored girder count.
         self._sync_member_properties_girder_count()

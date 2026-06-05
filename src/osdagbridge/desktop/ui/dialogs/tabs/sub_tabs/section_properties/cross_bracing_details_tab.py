@@ -19,10 +19,10 @@ class CrossBracingDetailsTab(QWidget):
     """
     Cross-Bracing Details logic/state widget.
 
-    All Qt widgets (combos, checkboxes, line-edits, preview widgets) are
-    injected by the parent (SectionPropertiesTab) via UIBuilder *before*
-    calling finish_init().  finish_init() wires signals and seeds default
-    state — it must be called exactly once after all bind-attributes exist.
+    All Qt widgets are built by UIBuilder and located at runtime via
+    self.findChild() using KEY_* constants as objectNames.
+    finish_init() seeds default state — it must be called exactly once
+    after UIBuilder has finished constructing child widgets.
     """
 
     def __init__(self, parent=None, additional_input_instance=None):
@@ -40,79 +40,127 @@ class CrossBracingDetailsTab(QWidget):
         self._selection_sync_guard  = False
         self._updating_chord_rules  = False
 
-        # Widget attributes will be set by UIBuilder in SectionPropertiesTab.
-        # Declare them as None so type-checkers and hasattr checks work safely.
-        self.select_girders_combo:         QComboBox | None = None
-        self.no_of_cross_bracing_input:    QLineEdit | None = None
-        self.member_id_display:            QLineEdit | None = None
-        self.spacing_input:                QLineEdit | None = None
-        self.bracing_type_combo:           QComboBox | None = None
-        self.connection_type_combo:        QComboBox | None = None
-        self.bracing_section_type_combo:   QComboBox | None = None
-        self.bracing_section_combo:        QComboBox | None = None
-        self.top_chord_checkbox:           QCheckBox | None = None
-        self.top_chord_type_combo:         QComboBox | None = None
-        self.top_chord_size_combo:         QComboBox | None = None
-        self.bottom_chord_checkbox:        QCheckBox | None = None
-        self.bottom_chord_type_combo:      QComboBox | None = None
-        self.bottom_chord_size_combo:      QComboBox | None = None
-        self.bracing_layout_widget:        BracingLayoutCadWidget | None = None
-        self.bracing_preview_label:        PlaceholderSectionPreviewWidget | None = None
-        self.top_chord_preview_label:      PlaceholderSectionPreviewWidget | None = None
-        self.bottom_chord_preview_label:   PlaceholderSectionPreviewWidget | None = None
-        self.top_chord_preview_box:        QWidget | None = None
-        self.bottom_chord_preview_box:     QWidget | None = None
-
         # Hidden compatibility combo (no UIBuilder parity needed)
         self.member_id_combo = QComboBox()
         self.member_id_combo.setVisible(False)
 
+    # ── findChild shorthand ────────────────────────────────────────────────────
+
+    def _w(self, widget_type, key):
+        """Return the first child widget of *widget_type* whose objectName == *key*."""
+        return self.findChild(widget_type, key)
+
+    # ── Convenience properties (read-only, via findChild) ─────────────────────
+
+    @property
+    def _select_girders_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_SELECT_GIRDERS)
+
+    @property
+    def _no_of_cross_bracing_input(self) -> QLineEdit | None:
+        return self._w(QLineEdit, KEY_MP_CB_COUNT)
+
+    @property
+    def _member_id_display(self) -> QLineEdit | None:
+        return self._w(QLineEdit, KEY_MP_CB_MEMBER_ID)
+
+    @property
+    def _spacing_input(self) -> QLineEdit | None:
+        return self._w(QLineEdit, KEY_MP_CB_SPACING)
+
+    @property
+    def _bracing_type_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_TYPE)
+
+    @property
+    def _connection_type_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_CONNECTION_TYPE)
+
+    @property
+    def _bracing_section_type_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_SECTION_TYPE)
+
+    @property
+    def _bracing_section_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_SECTION_DESIGNATION)
+
+    @property
+    def _top_chord_checkbox(self) -> QCheckBox | None:
+        return self._w(QCheckBox, KEY_MP_CB_TOP_CHORD_ENABLED)
+
+    @property
+    def _top_chord_type_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_TOP_CHORD_SECTION_TYPE)
+
+    @property
+    def _top_chord_size_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_TOP_CHORD_SECTION_DESIG)
+
+    @property
+    def _bottom_chord_checkbox(self) -> QCheckBox | None:
+        return self._w(QCheckBox, KEY_MP_CB_BOTTOM_CHORD_ENABLED)
+
+    @property
+    def _bottom_chord_type_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE)
+
+    @property
+    def _bottom_chord_size_combo(self) -> QComboBox | None:
+        return self._w(QComboBox, KEY_MP_CB_BOTTOM_CHORD_SECTION_DESIG)
+
+    @property
+    def _bracing_layout_widget(self):
+        return self._w(QWidget, KEY_MP_CB_LAYOUT_CAD)
+
+    @property
+    def _bracing_preview_label(self) -> PlaceholderSectionPreviewWidget | None:
+        return self._w(PlaceholderSectionPreviewWidget, KEY_MP_CB_SECTION_PREVIEW_CAD)
+
+    @property
+    def _top_chord_preview_label(self) -> PlaceholderSectionPreviewWidget | None:
+        return self._w(PlaceholderSectionPreviewWidget, KEY_MP_CB_TOP_CHORD_PREVIEW_CAD)
+
+    @property
+    def _bottom_chord_preview_label(self) -> PlaceholderSectionPreviewWidget | None:
+        return self._w(PlaceholderSectionPreviewWidget, KEY_MP_CB_BOTTOM_CHORD_PREVIEW_CAD)
+
+    @property
+    def _top_chord_preview_box(self) -> QWidget | None:
+        return self._w(QWidget, "top_chord_preview_box")
+
+    @property
+    def _bottom_chord_preview_box(self) -> QWidget | None:
+        return self._w(QWidget, "bottom_chord_preview_box")
+
     def finish_init(self) -> None:
         """
-        Wire signals and seed initial state.
-        Call this from SectionPropertiesTab after UIBuilder has set all
-        bind-attributes onto this instance.
+        Seed initial state after UIBuilder has finished constructing children.
+        Signal connections are handled by the schema's on_change / on_text_changed
+        keys — no manual .connect() calls are needed here.
         """
-        # Guard: if critical widgets are missing, bail out gracefully.
-        required = [
-            "bracing_type_combo", "bracing_section_type_combo",
-            "bracing_section_combo", "top_chord_checkbox",
-            "top_chord_type_combo", "top_chord_size_combo",
-            "bottom_chord_checkbox", "bottom_chord_type_combo",
-            "bottom_chord_size_combo",
-        ]
-        for attr in required:
-            if getattr(self, attr, None) is None:
-                raise RuntimeError(
-                    f"CrossBracingDetailsTab.finish_init: widget '{attr}' was not "
-                    "bound by UIBuilder before finish_init() was called."
-                )
-
-        if self.select_girders_combo is not None:
-            self.select_girders_combo.currentIndexChanged.connect(
-                self._on_select_girders_index_changed
-            )
-
-        self.bracing_type_combo.currentTextChanged.connect(self._update_previews)
-        self.bracing_type_combo.currentTextChanged.connect(self._on_bracing_layout_changed)
-        self.bracing_section_type_combo.currentTextChanged.connect(self._on_bracing_type_changed)
-        self.bracing_section_combo.currentTextChanged.connect(self._update_previews)
-        self.top_chord_checkbox.toggled.connect(self._on_bracing_layout_changed)
-        self.top_chord_type_combo.currentTextChanged.connect(self._on_top_chord_type_changed)
-        self.top_chord_size_combo.currentTextChanged.connect(self._update_previews)
-        self.bottom_chord_checkbox.toggled.connect(self._on_bracing_layout_changed)
-        self.bottom_chord_type_combo.currentTextChanged.connect(self._on_bottom_chord_type_changed)
-        self.bottom_chord_size_combo.currentTextChanged.connect(self._update_previews)
-
         self._populate_designations()
         self._on_design_changed(self._global_design_mode)
         self.refresh_girder_options()
         self._load_state_for_current_member()
         self._on_bracing_layout_changed()
 
+    # ── Schema-wired signal wrappers ───────────────────────────────────────────
+    # These thin wrappers satisfy the single on_change entry in the schema while
+    # still fanning out to the multiple internal handlers they need to trigger.
+
+    def _on_bracing_type_combo_changed(self, *_args) -> None:
+        """Called by schema on_change for KEY_MP_CB_TYPE."""
+        self._update_previews()
+        self._on_bracing_layout_changed()
+
+    def _on_bracing_section_type_changed(self, *_args) -> None:
+        """Called by schema on_change for KEY_MP_CB_SECTION_TYPE."""
+        label = self._bracing_section_type_combo.currentText() if self._bracing_section_type_combo else ""
+        self._on_bracing_type_changed(label)
+
     # ── Count / Spacing auto-calculation ──────────────────────────────────────
 
-    def _on_count_changed(self, text: str) -> None:
+    def _on_count_changed(self, *_args) -> None:
         self._sync_span_to_additional_input()
         self._recalculate_spacing()
         try:
@@ -143,10 +191,11 @@ class CrossBracingDetailsTab(QWidget):
         except (ValueError, TypeError):
             span_m = None
 
-        if self.no_of_cross_bracing_input is None:
+        count_input = self._no_of_cross_bracing_input
+        if count_input is None:
             return
 
-        count_text = (self.no_of_cross_bracing_input.text() or "").strip()
+        count_text = (count_input.text() or "").strip()
         if not count_text or span_m is None:
             self._clear_spacing()
             return
@@ -159,16 +208,18 @@ class CrossBracingDetailsTab(QWidget):
             self._clear_spacing()
             return
         spacing = span_m / (count + 1)
-        if self.spacing_input is not None:
-            self.spacing_input.blockSignals(True)
-            self.spacing_input.setText(f"{spacing:.2f}")
-            self.spacing_input.blockSignals(False)
+        spacing_w = self._spacing_input
+        if spacing_w is not None:
+            spacing_w.blockSignals(True)
+            spacing_w.setText(f"{spacing:.2f}")
+            spacing_w.blockSignals(False)
 
     def _clear_spacing(self) -> None:
-        if self.spacing_input is not None:
-            self.spacing_input.blockSignals(True)
-            self.spacing_input.setText("")
-            self.spacing_input.blockSignals(False)
+        spacing_w = self._spacing_input
+        if spacing_w is not None:
+            spacing_w.blockSignals(True)
+            spacing_w.setText("")
+            spacing_w.blockSignals(False)
 
     def _on_span_or_spacing_changed(self, *_args) -> None:
         self._sync_span_to_additional_input()
@@ -195,9 +246,10 @@ class CrossBracingDetailsTab(QWidget):
         return f"B{self._pair_index()}M1"
 
     def _current_member_key(self) -> str:
-        pair   = (self.select_girders_combo.currentText() or "").strip() if self.select_girders_combo else ""
+        sg = self._select_girders_combo
+        pair   = (sg.currentText() or "").strip() if sg else ""
         member = self._current_member_id()
-        return f"{pair}::{member}".strip(":")
+        return f"{pair}::{member}".strip("::")
 
     @staticmethod
     def _normalize_member_id(text: str, pair_index: int | None = None) -> str:
@@ -253,7 +305,8 @@ class CrossBracingDetailsTab(QWidget):
         return None
 
     def _pair_index(self) -> int:
-        idx = self.select_girders_combo.currentIndex() if self.select_girders_combo else -1
+        sg = self._select_girders_combo
+        idx = sg.currentIndex() if sg else -1
         return max(0, int(idx)) + 1
 
     def _get_total_span_m(self) -> float | None:
@@ -274,9 +327,10 @@ class CrossBracingDetailsTab(QWidget):
         return span if span > 0 else None
 
     def _get_cross_bracing_spacing_m(self) -> float | None:
-        if self.spacing_input is None:
+        spacing_w = self._spacing_input
+        if spacing_w is None:
             return None
-        text = (self.spacing_input.text() or "").strip()
+        text = (spacing_w.text() or "").strip()
         if not text:
             return None
         try:
@@ -286,9 +340,10 @@ class CrossBracingDetailsTab(QWidget):
         return spacing_m if spacing_m > 0 else None
 
     def _cross_bracing_member_count(self) -> int:
-        if self.no_of_cross_bracing_input is None:
+        count_w = self._no_of_cross_bracing_input
+        if count_w is None:
             return 1
-        count_text = (self.no_of_cross_bracing_input.text() or "").strip()
+        count_text = (count_w.text() or "").strip()
         try:
             return max(1, int(count_text))
         except (ValueError, TypeError):
@@ -304,12 +359,13 @@ class CrossBracingDetailsTab(QWidget):
         member_id  = f"B{pair_index}M1"
         display_text = member_id if count <= 1 else f"B{pair_index}M1 to B{pair_index}M{count}"
 
-        if self.member_id_display is not None:
-            prev = self.member_id_display.blockSignals(True)
+        mid_w = self._member_id_display
+        if mid_w is not None:
+            prev = mid_w.blockSignals(True)
             try:
-                self.member_id_display.setText(display_text)
+                mid_w.setText(display_text)
             finally:
-                self.member_id_display.blockSignals(prev)
+                mid_w.blockSignals(prev)
 
         block = self.member_id_combo.blockSignals(True)
         try:
@@ -403,14 +459,7 @@ class CrossBracingDetailsTab(QWidget):
         return field.get("default", fallback)
 
     def _widget_for_field(self, field_id: str):
-        """Resolve a schema field widget using its bind name or objectName."""
-        field     = self._schema_field_def(field_id)
-        bind_name = str(field.get("bind") or "").strip() if isinstance(field, dict) else ""
-        if bind_name and hasattr(self, bind_name):
-            widget = getattr(self, bind_name)
-            from PySide6.QtWidgets import QWidget as _QW
-            if isinstance(widget, _QW):
-                return widget
+        """Resolve a schema field widget by its objectName (== field id)."""
         key = str(field_id or "").strip()
         if key:
             from PySide6.QtWidgets import QWidget as _QW
@@ -445,17 +494,21 @@ class CrossBracingDetailsTab(QWidget):
             elif isinstance(widget, _Combo):
                 state[field_id] = widget.currentText()
 
+        bsc = self._bracing_section_combo
+        tcs = self._top_chord_size_combo
+        bcs = self._bottom_chord_size_combo
+
         state["design"]               = self._global_design_mode
-        state["bracing_section_data"] = self.bracing_section_combo.currentData() if self.bracing_section_combo else None
-        state["bracing_section_text"] = self.bracing_section_combo.currentText() if self.bracing_section_combo else ""
-        state["top_chord_data"]       = self.top_chord_size_combo.currentData()   if self.top_chord_size_combo   else None
-        state["top_chord_text"]       = self.top_chord_size_combo.currentText()   if self.top_chord_size_combo   else ""
-        state["bottom_chord_data"]    = self.bottom_chord_size_combo.currentData() if self.bottom_chord_size_combo else None
-        state["bottom_chord_text"]    = self.bottom_chord_size_combo.currentText() if self.bottom_chord_size_combo else ""
+        state["bracing_section_data"] = bsc.currentData() if bsc else None
+        state["bracing_section_text"] = bsc.currentText() if bsc else ""
+        state["top_chord_data"]       = tcs.currentData()   if tcs   else None
+        state["top_chord_text"]       = tcs.currentText()   if tcs   else ""
+        state["bottom_chord_data"]    = bcs.currentData() if bcs else None
+        state["bottom_chord_text"]    = bcs.currentText() if bcs else ""
         return state
 
     def _store_current_member_state(self) -> None:
-        if self.select_girders_combo is None:
+        if self._select_girders_combo is None:
             return
         key = self._active_member_key or self._current_member_key()
         if not key:
@@ -478,74 +531,88 @@ class CrossBracingDetailsTab(QWidget):
         def _get(full_key, short_key, default=None):
             return state.get(full_key, state.get(short_key, default))
 
-        self.bracing_type_combo.setCurrentText(
-            _get(KEY_MP_CB_TYPE, "bracing_type") or self.bracing_type_combo.currentText()
-        )
+        bt = self._bracing_type_combo
+        if bt:
+            bt.setCurrentText(
+                _get(KEY_MP_CB_TYPE, "bracing_type") or bt.currentText()
+            )
 
-        if self.connection_type_combo is not None:
-            self.connection_type_combo.setCurrentText(
+        ct = self._connection_type_combo
+        if ct is not None:
+            ct.setCurrentText(
                 _get(KEY_MP_CB_CONNECTION_TYPE, "connection_type")
-                or self.connection_type_combo.currentText()
+                or ct.currentText()
             )
 
-        self.bracing_section_type_combo.setCurrentText(
-            _get(KEY_MP_CB_SECTION_TYPE, "bracing_section_type")
-            or self.bracing_section_type_combo.currentText()
-        )
-        self._update_designations_for(
-            self.bracing_section_combo, self.bracing_section_type_combo.currentText()
-        )
-        self._set_combo_to_data_or_text(
-            self.bracing_section_combo,
-            state.get("bracing_section_data"),
-            state.get("bracing_section_text") or "",
-        )
+        bst = self._bracing_section_type_combo
+        if bst:
+            bst.setCurrentText(
+                _get(KEY_MP_CB_SECTION_TYPE, "bracing_section_type")
+                or bst.currentText()
+            )
+        bsc = self._bracing_section_combo
+        if bst and bsc:
+            self._update_designations_for(bsc, bst.currentText())
+            self._set_combo_to_data_or_text(
+                bsc,
+                state.get("bracing_section_data"),
+                state.get("bracing_section_text") or "",
+            )
 
-        self.top_chord_checkbox.setChecked(
-            bool(_get(KEY_MP_CB_TOP_CHORD_ENABLED, "top_chord_enabled", False))
-        )
-        self.top_chord_type_combo.setCurrentText(
-            _get(KEY_MP_CB_TOP_CHORD_SECTION_TYPE, "top_chord_type")
-            or self.top_chord_type_combo.currentText()
-        )
-        self._update_designations_for(
-            self.top_chord_size_combo, self.top_chord_type_combo.currentText()
-        )
-        self._set_combo_to_data_or_text(
-            self.top_chord_size_combo,
-            state.get("top_chord_data"),
-            state.get("top_chord_text") or "",
-        )
+        tcc = self._top_chord_checkbox
+        if tcc:
+            tcc.setChecked(
+                bool(_get(KEY_MP_CB_TOP_CHORD_ENABLED, "top_chord_enabled", False))
+            )
+        tct = self._top_chord_type_combo
+        if tct:
+            tct.setCurrentText(
+                _get(KEY_MP_CB_TOP_CHORD_SECTION_TYPE, "top_chord_type")
+                or tct.currentText()
+            )
+        tcs = self._top_chord_size_combo
+        if tct and tcs:
+            self._update_designations_for(tcs, tct.currentText())
+            self._set_combo_to_data_or_text(
+                tcs,
+                state.get("top_chord_data"),
+                state.get("top_chord_text") or "",
+            )
 
-        effective_bracing = (
-            _get(KEY_MP_CB_TYPE, "bracing_type") or self.bracing_type_combo.currentText() or ""
+        bt_text = (
+            _get(KEY_MP_CB_TYPE, "bracing_type") or (bt.currentText() if bt else "") or ""
         ).strip()
-        if effective_bracing == "K-Bracing":
-            self.bottom_chord_checkbox.setChecked(True)
-        else:
-            self.bottom_chord_checkbox.setChecked(
-                bool(_get(KEY_MP_CB_BOTTOM_CHORD_ENABLED, "bottom_chord_enabled", True))
+        bcc = self._bottom_chord_checkbox
+        if bcc:
+            if bt_text == "K-Bracing":
+                bcc.setChecked(True)
+            else:
+                bcc.setChecked(
+                    bool(_get(KEY_MP_CB_BOTTOM_CHORD_ENABLED, "bottom_chord_enabled", True))
+                )
+
+        bct = self._bottom_chord_type_combo
+        if bct:
+            bct.setCurrentText(
+                _get(KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE, "bottom_chord_type")
+                or bct.currentText()
+            )
+        bcs = self._bottom_chord_size_combo
+        if bct and bcs:
+            self._update_designations_for(bcs, bct.currentText())
+            self._set_combo_to_data_or_text(
+                bcs,
+                state.get("bottom_chord_data"),
+                state.get("bottom_chord_text") or "",
             )
 
-        self.bottom_chord_type_combo.setCurrentText(
-            _get(KEY_MP_CB_BOTTOM_CHORD_SECTION_TYPE, "bottom_chord_type")
-            or self.bottom_chord_type_combo.currentText()
-        )
-        self._update_designations_for(
-            self.bottom_chord_size_combo, self.bottom_chord_type_combo.currentText()
-        )
-        self._set_combo_to_data_or_text(
-            self.bottom_chord_size_combo,
-            state.get("bottom_chord_data"),
-            state.get("bottom_chord_text") or "",
-        )
-
-        if self.no_of_cross_bracing_input is not None:
-            self.no_of_cross_bracing_input.blockSignals(True)
-            self.no_of_cross_bracing_input.setText(
+        count_w = self._no_of_cross_bracing_input
+        if count_w is not None:
+            count_w.blockSignals(True)
+            count_w.setText(
                 _get(KEY_MP_CB_COUNT, "no_of_cross_bracing") or ""
             )
-            self.no_of_cross_bracing_input.blockSignals(False)
+            count_w.blockSignals(False)
 
         self._recalculate_spacing()
         self._on_bracing_layout_changed()
@@ -558,16 +625,17 @@ class CrossBracingDetailsTab(QWidget):
         self._active_member_key = key
         state = self._state_by_member_key.get(key) or self._default_member_state()
 
-        # Block all signals while restoring to avoid cascading updates
+        # Collect live widget references for signal blocking
         widgets_to_block = [
-            self.bracing_type_combo, self.bracing_section_type_combo,
-            self.bracing_section_combo, self.top_chord_checkbox,
-            self.top_chord_type_combo, self.top_chord_size_combo,
-            self.bottom_chord_checkbox, self.bottom_chord_type_combo,
-            self.bottom_chord_size_combo,
+            self._bracing_type_combo, self._bracing_section_type_combo,
+            self._bracing_section_combo, self._top_chord_checkbox,
+            self._top_chord_type_combo, self._top_chord_size_combo,
+            self._bottom_chord_checkbox, self._bottom_chord_type_combo,
+            self._bottom_chord_size_combo,
         ]
-        if self.connection_type_combo is not None:
-            widgets_to_block.append(self.connection_type_combo)
+        ct = self._connection_type_combo
+        if ct is not None:
+            widgets_to_block.append(ct)
 
         guards = [w.blockSignals(True) for w in widgets_to_block if w is not None]
         try:
@@ -580,7 +648,7 @@ class CrossBracingDetailsTab(QWidget):
 
     # ── Selection change handler ───────────────────────────────────────────────
 
-    def _on_select_girders_index_changed(self, idx: int) -> None:
+    def _on_select_girders_index_changed(self, *_args) -> None:
         if self._selection_sync_guard:
             return
         self._store_current_member_state()
@@ -626,22 +694,23 @@ class CrossBracingDetailsTab(QWidget):
         except Exception:
             pass
 
-        if self.select_girders_combo is None:
+        sg = self._select_girders_combo
+        if sg is None:
             return
 
         pairs     = self._girder_pairs()
-        prev_pair = self.select_girders_combo.currentText().strip()
+        prev_pair = sg.currentText().strip()
 
-        block_a = self.select_girders_combo.blockSignals(True)
+        block_a = sg.blockSignals(True)
         try:
-            self.select_girders_combo.clear()
-            self.select_girders_combo.addItems(pairs)
+            sg.clear()
+            sg.addItems(pairs)
             if prev_pair in pairs:
-                self.select_girders_combo.setCurrentText(prev_pair)
+                sg.setCurrentText(prev_pair)
             else:
-                self.select_girders_combo.setCurrentIndex(0)
+                sg.setCurrentIndex(0)
         finally:
-            self.select_girders_combo.blockSignals(block_a)
+            sg.blockSignals(block_a)
 
         self._refresh_member_id_display()
         self._load_state_for_current_member()
@@ -650,9 +719,9 @@ class CrossBracingDetailsTab(QWidget):
 
     def _apply_custom_mode(self, is_custom: bool) -> None:
         for widget in [
-            self.bracing_section_type_combo, self.bracing_section_combo,
-            self.top_chord_type_combo,        self.top_chord_size_combo,
-            self.bottom_chord_type_combo,     self.bottom_chord_size_combo,
+            self._bracing_section_type_combo, self._bracing_section_combo,
+            self._top_chord_type_combo,        self._top_chord_size_combo,
+            self._bottom_chord_type_combo,     self._bottom_chord_size_combo,
         ]:
             if widget is not None:
                 widget.setEnabled(is_custom)
@@ -699,9 +768,9 @@ class CrossBracingDetailsTab(QWidget):
     def _populate_designations(self) -> None:
         angles = self.catalog.list_angles()
         for combo in [
-            self.bracing_section_combo,
-            self.top_chord_size_combo,
-            self.bottom_chord_size_combo,
+            self._bracing_section_combo,
+            self._top_chord_size_combo,
+            self._bottom_chord_size_combo,
         ]:
             if combo is not None:
                 self._fill_combo(combo, angles, "angle")
@@ -724,56 +793,56 @@ class CrossBracingDetailsTab(QWidget):
 
     # ── Type-change callbacks ──────────────────────────────────────────────────
 
-    def _on_bracing_type_changed(self, label: str) -> None:
-        self._update_designations_for(self.bracing_section_combo, label)
+    def _on_bracing_type_changed(self, *_args) -> None:
+        label = self._bracing_section_type_combo.currentText() if self._bracing_section_type_combo else ""
+        self._update_designations_for(self._bracing_section_combo, label)
         self._update_previews()
 
-    def _on_top_chord_type_changed(self, label: str) -> None:
-        self._update_designations_for(self.top_chord_size_combo, label)
+    def _on_top_chord_type_changed(self, *_args) -> None:
+        label = self._top_chord_type_combo.currentText() if self._top_chord_type_combo else ""
+        self._update_designations_for(self._top_chord_size_combo, label)
         self._update_previews()
 
-    def _on_bottom_chord_type_changed(self, label: str) -> None:
-        self._update_designations_for(self.bottom_chord_size_combo, label)
+    def _on_bottom_chord_type_changed(self, *_args) -> None:
+        label = self._bottom_chord_type_combo.currentText() if self._bottom_chord_type_combo else ""
+        self._update_designations_for(self._bottom_chord_size_combo, label)
         self._update_previews()
 
     # ── Preview update ─────────────────────────────────────────────────────────
 
-    def _update_previews(self) -> None:
+    def _update_previews(self, *_args) -> None:
+        bpl = self._bracing_preview_label
+        tcp = self._top_chord_preview_label
+        bcp = self._bottom_chord_preview_label
+
         if self._global_design_mode != "Custom":
-            for w in [
-                self.bracing_preview_label,
-                self.top_chord_preview_label,
-                self.bottom_chord_preview_label,
-            ]:
+            for w in [bpl, tcp, bcp]:
                 if w is not None:
                     w.set_section("", "")
             return
 
-        if self.bracing_preview_label and self.bracing_section_type_combo and self.bracing_section_combo:
-            self._set_preview(
-                self.bracing_preview_label,
-                self.bracing_section_type_combo,
-                self.bracing_section_combo,
-            )
-        if self.top_chord_checkbox and self.top_chord_checkbox.isChecked():
-            if self.top_chord_preview_label and self.top_chord_type_combo and self.top_chord_size_combo:
-                self._set_preview(
-                    self.top_chord_preview_label,
-                    self.top_chord_type_combo,
-                    self.top_chord_size_combo,
-                )
-        elif self.top_chord_preview_label:
-            self.top_chord_preview_label.set_section("", "")
+        bst = self._bracing_section_type_combo
+        bsc = self._bracing_section_combo
+        if bpl and bst and bsc:
+            self._set_preview(bpl, bst, bsc)
 
-        if self.bottom_chord_checkbox and self.bottom_chord_checkbox.isChecked():
-            if self.bottom_chord_preview_label and self.bottom_chord_type_combo and self.bottom_chord_size_combo:
-                self._set_preview(
-                    self.bottom_chord_preview_label,
-                    self.bottom_chord_type_combo,
-                    self.bottom_chord_size_combo,
-                )
-        elif self.bottom_chord_preview_label:
-            self.bottom_chord_preview_label.set_section("", "")
+        tcc = self._top_chord_checkbox
+        tct = self._top_chord_type_combo
+        tcs = self._top_chord_size_combo
+        if tcc and tcc.isChecked():
+            if tcp and tct and tcs:
+                self._set_preview(tcp, tct, tcs)
+        elif tcp:
+            tcp.set_section("", "")
+
+        bcc = self._bottom_chord_checkbox
+        bct = self._bottom_chord_type_combo
+        bcs = self._bottom_chord_size_combo
+        if bcc and bcc.isChecked():
+            if bcp and bct and bcs:
+                self._set_preview(bcp, bct, bcs)
+        elif bcp:
+            bcp.set_section("", "")
 
     # ── Layout change (chord visibility + CAD widget) ─────────────────────────
 
@@ -782,51 +851,63 @@ class CrossBracingDetailsTab(QWidget):
             return
         self._updating_chord_rules = True
         try:
-            bracing   = (self.bracing_type_combo.currentText() or "").strip() if self.bracing_type_combo else ""
+            bt = self._bracing_type_combo
+            bracing   = (bt.currentText() or "").strip() if bt else ""
             is_custom = self._global_design_mode == "Custom"
 
+            tcc = self._top_chord_checkbox
+            bcc = self._bottom_chord_checkbox
+
             if bracing == "K-Bracing":
-                if self.bottom_chord_checkbox is not None:
-                    self.bottom_chord_checkbox.setChecked(True)
-                    self.bottom_chord_checkbox.setEnabled(True)
-                if self.top_chord_checkbox is not None:
-                    self.top_chord_checkbox.setEnabled(True)
+                if bcc is not None:
+                    bcc.setChecked(True)
+                    bcc.setEnabled(True)
+                if tcc is not None:
+                    tcc.setEnabled(True)
             else:
-                for cb in [self.bottom_chord_checkbox, self.top_chord_checkbox]:
+                for cb in [bcc, tcc]:
                     if cb is not None:
                         cb.setEnabled(True)
 
-            top_enabled    = is_custom and (self.top_chord_checkbox.isChecked()    if self.top_chord_checkbox    else False)
-            bottom_enabled = is_custom and (self.bottom_chord_checkbox.isChecked() if self.bottom_chord_checkbox else False)
+            top_enabled    = is_custom and (tcc.isChecked() if tcc else False)
+            bottom_enabled = is_custom and (bcc.isChecked() if bcc else False)
 
-            for w in [self.top_chord_type_combo, self.top_chord_size_combo]:
+            tct = self._top_chord_type_combo
+            tcs = self._top_chord_size_combo
+            for w in [tct, tcs]:
                 if w is not None:
                     w.setEnabled(top_enabled)
-            for w in [self.bottom_chord_type_combo, self.bottom_chord_size_combo]:
+
+            bct = self._bottom_chord_type_combo
+            bcs = self._bottom_chord_size_combo
+            for w in [bct, bcs]:
                 if w is not None:
                     w.setEnabled(bottom_enabled)
 
-            if self.top_chord_preview_box is not None:
-                self.top_chord_preview_box.setVisible(
-                    self.top_chord_checkbox.isChecked() if self.top_chord_checkbox else False
-                )
+            tcpb = self._top_chord_preview_box
+            if tcpb is not None:
+                tcpb.setVisible(tcc.isChecked() if tcc else False)
 
             show_bottom = (
-                (self.bottom_chord_checkbox.isChecked() if self.bottom_chord_checkbox else False)
+                (bcc.isChecked() if bcc else False)
                 or bracing == "K-Bracing"
             )
-            if show_bottom and self.bottom_chord_checkbox is not None and not self.bottom_chord_checkbox.isChecked():
-                self.bottom_chord_checkbox.setChecked(True)
-            if self.bottom_chord_preview_box is not None:
-                self.bottom_chord_preview_box.setVisible(show_bottom)
+            if show_bottom and bcc is not None and not bcc.isChecked():
+                bcc.setChecked(True)
+            bcpb = self._bottom_chord_preview_box
+            if bcpb is not None:
+                bcpb.setVisible(show_bottom)
 
-            if self.bracing_layout_widget is not None:
-                self.bracing_layout_widget.set_layout(
+            blw = self._bracing_layout_widget
+            mid_w = self._member_id_display
+            sg    = self._select_girders_combo
+            if blw is not None:
+                blw.set_layout(
                     bracing,
-                    self.top_chord_checkbox.isChecked()    if self.top_chord_checkbox    else False,
-                    self.bottom_chord_checkbox.isChecked() if self.bottom_chord_checkbox else False,
-                    self.member_id_display.text()          if self.member_id_display     else "",
-                    self.select_girders_combo.currentText() if self.select_girders_combo else "",
+                    tcc.isChecked() if tcc else False,
+                    bcc.isChecked() if bcc else False,
+                    mid_w.text() if mid_w else "",
+                    sg.currentText() if sg else "",
                 )
         finally:
             self._updating_chord_rules = False
@@ -847,8 +928,9 @@ class CrossBracingDetailsTab(QWidget):
 
         self._selection_sync_guard = True
         try:
-            if self.select_girders_combo is not None and self.select_girders_combo.count() > 0:
-                self.select_girders_combo.setCurrentIndex(0)
+            sg = self._select_girders_combo
+            if sg is not None and sg.count() > 0:
+                sg.setCurrentIndex(0)
             if self.member_id_combo.count() > 0:
                 self.member_id_combo.setCurrentIndex(0)
         finally:
@@ -875,7 +957,8 @@ class CrossBracingDetailsTab(QWidget):
                 payload["member_id"]      = member_id
                 by_member[member_id]      = payload
 
-        current_pair   = (self.select_girders_combo.currentText() or "").strip() if self.select_girders_combo else ""
+        sg = self._select_girders_combo
+        current_pair   = (sg.currentText() or "").strip() if sg else ""
         current_member = self._current_member_id().strip().upper()
 
         result: dict[str, object] = {
@@ -934,9 +1017,10 @@ class CrossBracingDetailsTab(QWidget):
             pass
 
         target_pair = str(data.get("select_girders") or "").strip()
-        if target_pair and self.select_girders_combo is not None:
+        sg = self._select_girders_combo
+        if target_pair and sg is not None:
             try:
-                self.select_girders_combo.setCurrentText(target_pair)
+                sg.setCurrentText(target_pair)
             except Exception:
                 pass
 

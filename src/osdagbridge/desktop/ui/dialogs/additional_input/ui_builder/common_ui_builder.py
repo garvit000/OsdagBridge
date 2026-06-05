@@ -187,12 +187,17 @@ class UIBuilder(QWidget):
 
         # ── Normal card with grid ──────────────────────────────────────────
         card, card_layout = self._create_section_card(section.get("title", ""))
-        bind_container = section.get("bind_container")
-        if bind_container:
-            setattr(self.owner, bind_container, card)
         object_name = section.get("object_name")
         if object_name:
             card.setObjectName(object_name)
+            # Border for card with object_name
+            card.setStyleSheet(f"""
+                QFrame#{object_name} {{
+                    background-color: white;
+                    border: 1px solid #b2b2b2;
+                    border-radius: 8px;
+                }}
+            """)
         self._build_grid(section, card_layout)
         parent_layout.addWidget(card)
 
