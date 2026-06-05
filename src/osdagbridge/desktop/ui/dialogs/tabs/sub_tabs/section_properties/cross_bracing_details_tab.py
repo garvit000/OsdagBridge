@@ -606,14 +606,6 @@ class CrossBracingDetailsTab(QWidget):
                 state.get("bottom_chord_text") or "",
             )
 
-        count_w = self._no_of_cross_bracing_input
-        if count_w is not None:
-            count_w.blockSignals(True)
-            count_w.setText(
-                _get(KEY_MP_CB_COUNT, "no_of_cross_bracing") or ""
-            )
-            count_w.blockSignals(False)
-
         self._recalculate_spacing()
         self._on_bracing_layout_changed()
         self._on_design_changed(self._global_design_mode)
@@ -1001,15 +993,27 @@ class CrossBracingDetailsTab(QWidget):
                 if not isinstance(payload, dict):
                     continue
                 pair_label = str(payload.get("select_girders") or "").strip()
-                member_id  = str(payload.get("member_id") or _member_id or "").strip().upper()
-                if not pair_label or not member_id.endswith("M1"):
+                girder_pair = str(payload.get("select_girders") or "").strip()
+                member = str(payload.get("member_id") or _member_id or "").strip().upper()
+                if not girder_pair or not member:
                     continue
-                state = dict(payload)
-                state.pop("select_girders", None)
-                state.pop("member_id", None)
-                rebuilt[f"{pair_label}::{member_id}"] = state
-            if rebuilt:
-                self._state_by_member_key = rebuilt
+                key = f"{girder_pair}::{member}"
+                rebuilt[key] = dict(payload)
+            self._state_by_member_key = rebuilt
+
+        # Restore global fields
+        for field in self._schema_fields("overview"):
+            field_id = str(field.get("id") or "").strip()
+            if not field_id or field_id in ("select_girders", "member_id"):
+                continue
+            if field_id in data:
+                widget = self._widget_for_field(field_id)
+                if hasattr(widget, "setText"):
+                    widget.setText(str(data[field_id]))
+                elif hasattr(widget, "setCurrentText"):
+                    widget.setCurrentText(str(data[field_id]))
+                elif hasattr(widget, "setChecked"):
+                    widget.setChecked(bool(data[field_id]))
 
         try:
             self.refresh_girder_options()

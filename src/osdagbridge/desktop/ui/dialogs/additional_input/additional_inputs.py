@@ -93,6 +93,9 @@ class AdditionalInputs(QDialog):
         # This must run after set_defaults() so working_input_dict is populated.
         self._sync_member_properties_girder_count()
 
+        # Restore complex nested properties (e.g. cross_bracing_by_member) into sub-tabs.
+        self.set_properties_data(self.working_input_dict)
+
 
     def set_defaults(self) -> None:
         """
