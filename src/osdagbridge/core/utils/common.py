@@ -347,6 +347,8 @@ KEY_SD_SECTION_PROP_ZUZ = "steeldesign.details.section_properties.zuz"
 KEY_SD_SECTION_PROP_ZUV = "steeldesign.details.section_properties.zuv"
 KEY_SD_SECTION_PROP_IT = "steeldesign.details.section_properties.it"
 KEY_SD_SECTION_PROP_IW = "steeldesign.details.section_properties.iw"
+KEY_SD_COMPOSITE_IZ = "steeldesign.details.composite_iz"                        # short-term composite Iz, mm⁴
+KEY_SD_PLASTIC_NEUTRAL_AXIS_MM = "steeldesign.details.plastic_neutral_axis_mm"  # xu (depth to PNA), mm
 
 
 
@@ -1033,6 +1035,23 @@ DESIGN_CHECK_CAP_PFX = {
     KEY_CHECK_STRESS:           "<i>f<sub>y</sub> / &gamma;<sub>m</sub></i>",
     KEY_CHECK_DEFLECTION:       "<i>L / x</i>",
 }
+
+# Report keys — design-check values consumed by report_generator (Chapter 5).
+# Populated by PlateGirderBridge.store_design_results() from the designer.py
+
+# Table 5.2 — Section Classification (designer.py classify_section)
+KEY_REPORT_SC_EPSILON      = "report.section_class.epsilon"       # ε = √(250/fy)
+KEY_REPORT_SC_FLANGE_RATIO = "report.section_class.flange_ratio"  # b/tf of outstanding flange
+KEY_REPORT_SC_FLANGE_LIMIT = "report.section_class.flange_limit"  # limiting b/tf for assigned class
+KEY_REPORT_SC_FLANGE_CLASS = "report.section_class.flange_class"  # Plastic / Compact / Semi-Compact / Slender
+KEY_REPORT_SC_WEB_RATIO    = "report.section_class.web_ratio"     # d/tw of web
+KEY_REPORT_SC_WEB_LIMIT    = "report.section_class.web_limit"     # limiting d/tw for assigned class
+KEY_REPORT_SC_WEB_CLASS    = "report.section_class.web_class"     # Plastic / Compact / Semi-Compact / Slender
+# Table 5.3 — Moment Capacity (controlling girder, designer.py run_design_check)
+KEY_REPORT_MU_KNM          = "report.flexure.mu_knm"              # applied moment Mu, kNm
+KEY_REPORT_MP_KNM          = "report.flexure.mp_knm"              # plastic moment Mp, kNm
+KEY_REPORT_MD_KNM          = "report.flexure.md_knm"              # design moment capacity Md, kNm
+KEY_REPORT_GOVERNING_LC    = "report.flexure.governing_lc"        # governing load combination
 
 # Value Lists for Additional Inputs
 VALUES_NO_YES = ["No", "Yes"]

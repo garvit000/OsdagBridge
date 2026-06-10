@@ -147,6 +147,20 @@ from osdagbridge.core.utils.common import (
     KEY_SD_SECTION_PROP_ZUV,
     KEY_SD_SECTION_PROP_IT,
     KEY_SD_SECTION_PROP_IW,
+    KEY_SD_COMPOSITE_IZ,
+    KEY_SD_PLASTIC_NEUTRAL_AXIS_MM,
+    # Report keys (Chapter 5 design-check tables)
+    KEY_REPORT_SC_EPSILON,
+    KEY_REPORT_SC_FLANGE_RATIO,
+    KEY_REPORT_SC_FLANGE_LIMIT,
+    KEY_REPORT_SC_FLANGE_CLASS,
+    KEY_REPORT_SC_WEB_RATIO,
+    KEY_REPORT_SC_WEB_LIMIT,
+    KEY_REPORT_SC_WEB_CLASS,
+    KEY_REPORT_MU_KNM,
+    KEY_REPORT_MP_KNM,
+    KEY_REPORT_MD_KNM,
+    KEY_REPORT_GOVERNING_LC,
     # Stiffener table
     KEY_SD_STIFFENER_ROW_INTERMEDIATE,
     KEY_SD_STIFFENER_ROW_LONGITUDINAL,
@@ -2951,6 +2965,26 @@ class PlateGirderBridge:
 
         # Effective slab width from the composite capacity check (mm)
         out[KEY_SD_EFFECTIVE_SLAB_WIDTH] = dr["beff_mm"]
+        # Short-term composite Iz (mm⁴) and depth to plastic neutral axis (mm)
+        out[KEY_SD_COMPOSITE_IZ] = dr.get("I_comp_short_mm4", 0.0)
+        out[KEY_SD_PLASTIC_NEUTRAL_AXIS_MM] = dr.get("xu_mm", 0.0)
+
+        # ── 2b. Report keys — Chapter 5 design-check tables ─────────────────────
+        # Table 5.2 (section classification, from designer.classify_section)
+        sec_class = dr.get("capacity_details", {}).get("section_class", {})
+        out[KEY_REPORT_SC_EPSILON]      = sec_class.get("epsilon", 0.0)
+        out[KEY_REPORT_SC_FLANGE_RATIO] = sec_class.get("b_tf_ratio", 0.0)
+        out[KEY_REPORT_SC_FLANGE_LIMIT] = sec_class.get("flange_limit", 0.0)
+        out[KEY_REPORT_SC_FLANGE_CLASS] = dr.get("section_class_flange", "")
+        out[KEY_REPORT_SC_WEB_RATIO]    = sec_class.get("d_tw_ratio", 0.0)
+        out[KEY_REPORT_SC_WEB_LIMIT]    = sec_class.get("web_limit", 0.0)
+        out[KEY_REPORT_SC_WEB_CLASS]    = dr.get("section_class_web", "")
+        # Table 5.3 (moment capacity, controlling girder — same values shown in
+        # the Design Check tab's flexure card)
+        out[KEY_REPORT_MU_KNM]          = dr.get("Mu_kNm", 0.0)
+        out[KEY_REPORT_MP_KNM]          = dr.get("Mp_kNm", 0.0)
+        out[KEY_REPORT_MD_KNM]          = dr.get("Md_kNm", 0.0)
+        out[KEY_REPORT_GOVERNING_LC]    = dr.get("governing_combination", "")
 
         # ── 3. Shear connector card ─────────────────────────────────────────────
         # All stud dimensions in mm; strengths in MPa; count and spacing as numbers.
