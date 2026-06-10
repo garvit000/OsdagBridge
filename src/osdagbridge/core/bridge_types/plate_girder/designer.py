@@ -696,12 +696,28 @@ class IRC22CapacityCalculator:
         class_order = {"Plastic": 1, "Compact": 2, "Semi-Compact": 3, "Slender": 4}
         governing = max(web_class, flange_class, key=lambda c: class_order.get(c, 4))
 
+        # Limiting ratios for the assigned class (IS 800:2007 Table 2) — reported
+        # alongside the actual ratios in the design report (Table 5.2).
+        eps = web_res["epsilon"]
+        web_limits = {
+            "Plastic"     : web_res["plastic_limit"],
+            "Compact"     : web_res["compact_limit"],
+            "Semi-Compact": web_res["semi_compact_limit"],
+            "Slender"     : web_res["semi_compact_limit"],
+        }
+        if sec.fabrication.lower() == "welded":
+            flange_factors = {"Plastic": 8.4, "Compact": 9.4, "Semi-Compact": 13.6, "Slender": 13.6}
+        else:
+            flange_factors = {"Plastic": 9.4, "Compact": 10.5, "Semi-Compact": 15.7, "Slender": 15.7}
+
         return {
             "epsilon"        : round(web_res["epsilon"], 4),
             "d_tw_ratio"     : round(web_res["d_by_t"], 2),
             "b_tf_ratio"     : round(b_tf, 2),
             "web_class"      : web_class,
             "flange_class"   : flange_class,
+            "web_limit"      : round(web_limits.get(web_class, 0.0), 2),
+            "flange_limit"   : round(flange_factors.get(flange_class, 0.0) * eps, 2),
             "governing_class": governing,
             "clause"         : "IRC 22:2015 - Cl.603 | IS 800:2007 Table 2",
             "source"         : "IRC22_2014",

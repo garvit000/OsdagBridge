@@ -131,6 +131,33 @@ from osdagbridge.core.utils.common import (
     KEY_MD_TYPE,
     KEY_RL_TYPE,
     KEY_RL_LOAD_VALUE,
+    # Steel design section properties (populated by store_design_results)
+    KEY_SD_TOTAL_DEPTH,
+    KEY_SD_WEB_THICKNESS,
+    KEY_SD_TOP_FLANGE_WIDTH,
+    KEY_SD_TOP_FLANGE_THICKNESS,
+    KEY_SD_EFFECTIVE_SLAB_WIDTH,
+    KEY_SD_SECTION_PROP_AREA,
+    KEY_SD_SECTION_PROP_IZ,
+    KEY_SD_SECTION_PROP_ZZ,
+    KEY_SD_SECTION_PROP_ZUZ,
+    KEY_SD_COMPOSITE_IZ,
+    KEY_SD_PLASTIC_NEUTRAL_AXIS_MM,
+    KEY_SD_SECTION_CLASS,
+    # Report keys (populated by store_design_results from designer results)
+    KEY_REPORT_SC_EPSILON,
+    KEY_REPORT_SC_FLANGE_RATIO,
+    KEY_REPORT_SC_FLANGE_LIMIT,
+    KEY_REPORT_SC_FLANGE_CLASS,
+    KEY_REPORT_SC_WEB_RATIO,
+    KEY_REPORT_SC_WEB_LIMIT,
+    KEY_REPORT_SC_WEB_CLASS,
+    KEY_REPORT_MU_KNM,
+    KEY_REPORT_MP_KNM,
+    KEY_REPORT_MD_KNM,
+    KEY_REPORT_GOVERNING_LC,
+    # Utilization (percent values)
+    KEY_UTIL_FLEXURE,
     # Shear Connector output keys (populated by store_design_results)
     KEY_SD_SHEAR_YIELD_STRENGTH,
     KEY_SD_SHEAR_ULTIMATE_STRENGTH,
@@ -241,6 +268,25 @@ def _v(input_dict, key, suffix='', default=''):
     return f"{val}{suffix}"
 
 
+def _ov(od, key, scale=1.0, precision=2, suffix='', fallback=''):
+    """Fetch a value from output_dict, scale it, and format it for LaTeX.
+
+    Returns a \\placeholder{} when the value is missing or zero (zero signals
+    'not yet computed' for structural properties).
+    """
+    val = od.get(key)
+    if val in (None, ''):
+        return _ph(fallback) if fallback else r'\placeholder{---}'
+    try:
+        fval = float(val) * scale
+        if fval == 0.0:
+            return _ph(fallback) if fallback else r'\placeholder{---}'
+        return f"{fval:.{precision}f}{suffix}"
+    except (TypeError, ValueError):
+        s = _tex(str(val))
+        return (s + suffix) if s else (_ph(fallback) if fallback else r'\placeholder{---}')
+
+
 def _ph(key):
     """Return a \\placeholder{key} command."""
     # Temporarily remove any existing escapes to avoid double escaping, then escape all
@@ -288,8 +334,22 @@ def _get_n_girders(input_dict, output_dict=None):
     return 0  # fallback
 
 
-def _girder_labels(n):
-    return [(_ph('Girder Label'), _ph('Member ID'))]
+def _girder_labels(n, input_dict=None):
+    """Return [(girder_label, member_id)] for n girders.
+
+    Uses KEY_MP_SELECT_GIRDER.G{i} / KEY_MP_MEMBER_ID.G{i}.M1 from input_dict
+    when available; falls back to placeholders.
+    """
+    count = max(n, 1)
+    if not input_dict:
+        return [(_ph('Girder Label'), _ph('Member ID'))] * count
+    return [
+        (
+            _v(input_dict, f"{KEY_MP_SELECT_GIRDER}.G{i}") or _ph('Girder Label'),
+            _v(input_dict, f"{KEY_MP_MEMBER_ID}.G{i}.M1") or _ph('Member ID'),
+        )
+        for i in range(1, count + 1)
+    ]
 
 
 
@@ -1313,39 +1373,68 @@ A grillage model was used for structural analysis. The deck is idealized as a gr
 def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
     n_girders = _get_n_girders(bridge.input_dict, bridge.output_dict)
 
-    # Generate Table 5.2 rows
+    od = bridge.output_dict
+
+    # Generate Table 5.2 rows — Section Classification.
+    # Values come from designer.classify_section(), stored in output_dict by
+    # store_design_results() under the KEY_REPORT_SC_* report keys.
+    fl_ratio  = _ov(od, KEY_REPORT_SC_FLANGE_RATIO, precision=2, fallback='val')
+    fl_limit  = _ov(od, KEY_REPORT_SC_FLANGE_LIMIT, precision=2, fallback='limit')
+    fl_class  = _ov(od, KEY_REPORT_SC_FLANGE_CLASS, fallback='class')
+    web_ratio = _ov(od, KEY_REPORT_SC_WEB_RATIO, precision=2, fallback='val')
+    web_limit = _ov(od, KEY_REPORT_SC_WEB_LIMIT, precision=2, fallback='limit')
+    web_class = _ov(od, KEY_REPORT_SC_WEB_CLASS, fallback='class')
+    eps       = _ov(od, KEY_REPORT_SC_EPSILON, precision=4, fallback='epsilon')
+    gov_class = _ov(od, KEY_SD_SECTION_CLASS, fallback='governing class')
     t52_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t52_rows.append(
-            r"\multirow{4}{*}{\makecell{" + lbl + r"""}} & Top Flange & $(b_f - t_w) / 2t_f =$ \placeholder{val} & \placeholder{limit} & Plastic / Compact / Semi-Compact \\[6pt]
-\cline{2-5}
- & Bottom Flange & $(b_f - t_w) / 2t_f =$ \placeholder{val} & \placeholder{limit} & \placeholder{class} \\[6pt]
-\cline{2-5}
- & Web & d / tw = \placeholder{val} & \placeholder{limit} & \placeholder{class} \\[6pt]
-\cline{2-5}
- & Overall Section & --- & --- & \placeholder{governing class} \\[6pt]
-\hline"""
+            r"\multirow{4}{*}{\makecell{" + lbl + r"}} & Top Flange & "
+            + r"$(b_f - t_w) / 2t_f = $ " + fl_ratio
+            + r" & " + fl_limit + r" & " + fl_class + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Bottom Flange & $(b_f - t_w) / 2t_f = $ " + fl_ratio
+            + r" & " + fl_limit + r" & " + fl_class + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Web & $d / t_w = $ " + web_ratio
+            + r" & " + web_limit + r" & " + web_class + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Overall Section & $\varepsilon = \sqrt{250/f_y} = $ " + eps
+            + r" & --- & " + gov_class + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     t52_content = "\n".join(t52_rows)
 
-    # Generate Table 5.3 rows
+    # Generate Table 5.3 rows — Moment Capacity.
+    # Same values shown in the Design Check tab's flexure card (controlling
+    # girder), stored in output_dict by store_design_results() under the
+    # KEY_REPORT_* report keys; UR comes from KEY_UTIL_FLEXURE (percent).
+    gov_lc = _ov(od, KEY_REPORT_GOVERNING_LC, fallback='Load Case')
+    mu     = _ov(od, KEY_REPORT_MU_KNM, precision=2, fallback='Mu')
+    mp     = _ov(od, KEY_REPORT_MP_KNM, precision=2, fallback='Mp')
+    md     = _ov(od, KEY_REPORT_MD_KNM, precision=2, fallback='Md')
+    ur     = _ov(od, KEY_UTIL_FLEXURE, 0.01, 3, fallback='UR')
     t53_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t53_rows.append(
-            r"\multirow{4}{*}{\makecell{" + lbl + r"""}} & Applied Moment, $M_u$ & from \placeholder{Load Case} & \placeholder{$M_u$} kN-m & --- \\[6pt]
-\cline{2-5}
- & Plastic Moment, Mp & Zp $\times$ fy / $\gamma_{M0}$ & \placeholder{Mp} kN-m & --- \\[6pt]
-\cline{2-5}
- & Design Moment Capacity, Md & Mp / $\gamma_{M0}$ & \placeholder{$M_d$} kN-m & --- \\[6pt]
-\cline{2-5}
- & Utilization Ratio, $M_u / M_d$ & --- & \placeholder{UR} & $\leq 1.0$ \\[6pt]
-\hline"""
+            r"\multirow{4}{*}{\makecell{" + lbl + r"}} & Applied Moment, $M_u$ & from "
+            + gov_lc + r" & " + mu + r" kN-m & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Plastic Moment, Mp & Zp $\times$ fy / $\gamma_{M0}$ & "
+            + mp + r" kN-m & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Design Moment Capacity, Md & Mp / $\gamma_{M0}$ & "
+            + md + r" kN-m & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Utilization Ratio, $M_u / M_d$ & --- & "
+            + ur + r" & $\leq 1.0$ \\[6pt]" + "\n"
+            + r"\hline"
         )
     t53_content = "\n".join(t53_rows)
 
     # Generate Table 5.4 rows
     t54_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t54_rows.append(
             r"\multirow{9}{*}{\makecell{" + lbl + r"""}} & Applied Shear, $V_u$ & from \placeholder{Load Case} & \placeholder{$V_u$} kN & --- \\[6pt]
 \cline{2-5}
@@ -1370,7 +1459,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.5 rows
     t55_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t55_rows.append(
             r"\multirow{3}{*}{\makecell{" + lbl + r"""}} & High Shear Condition? & V > 0.6 Vd & Yes / No & --- \\[6pt]
 \cline{2-5}
@@ -1383,7 +1472,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.6 rows
     t56_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t56_rows.append(
             r"\multirow{5}{*}{\makecell{" + lbl + r"""}} & Elastic Critical Moment, Mcr & pi²EIy/LLT² $\times$ (GIt + pi²EIw/LLT²)\textasciicircum 0.5 & \placeholder{$M_{cr}$} kN-m & --- \\[6pt]
 \cline{2-5}
@@ -1400,7 +1489,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.7 rows
     t57_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t57_rows.append(
             r"\multirow{6}{*}{\makecell{" + lbl + r"""}} & \textbf{Shear Buckling Design Method} & Simple Post Critical / Tension Field \\[6pt]
 \cline{2-3}
@@ -1419,7 +1508,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.8 rows
     t58_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t58_rows.append(
             r"\multirow{2}{*}{\makecell{" + lbl + r"""}} & Min. Moment of Inertia, Is & $\geq$ 0.75 d tw3$ = \placeholder{val} mm4$ & \placeholder{Is\_prov} mm4$ & PASS \\[6pt]
 \cline{2-5}
@@ -1430,7 +1519,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.9 rows
     t59_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t59_rows.append(
             r"\multirow{3}{*}{\makecell{" + lbl + r"""}} & Vertical Anchor Force, $V_p$ & $d \times t_w \times f_y / \sqrt{3}$ & \placeholder{$V_p$} kN & --- \\[6pt]
 \cline{2-5}
@@ -1443,7 +1532,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.10 rows
     t510_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t510_rows.append(
             r"\multirow{2}{*}{\makecell{" + lbl + r"""}} & Live Load Deflection (\placeholder{Limit}) & \placeholder{$\delta$\_allow\_LL} mm & \placeholder{$\delta$\_LL} mm & PASS / FAIL \\[6pt]
 \cline{2-5}
@@ -1454,7 +1543,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.11 rows
     t511_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t511_rows.append(
             r"\multirow{2}{*}{\makecell{" + lbl + r"""}} & Concrete (0.48 fck) & \placeholder{allow\_c} MPa & \placeholder{actual\_c} MPa & PASS / FAIL \\[6pt]
 \cline{2-5}
@@ -1465,7 +1554,7 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
 
     # Generate Table 5.12 rows
     t512_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t512_rows.append(
             r"\multirow{3}{*}{\makecell{" + lbl + r"""}} & Welded Girder Web & \placeholder{Reference} & \placeholder{ffd} MPa & \placeholder{f\_actual} MPa --- PASS \\[6pt]
 \cline{2-5}
@@ -1476,9 +1565,47 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
         )
     t512_content = "\n".join(t512_rows)
 
+    # Build Table 5.1 — Girder Section Properties
+    t51_rows = (
+        r'\hline' + '\n'
+        r'\textbf{Depth, D} & '
+        + _ov(od, KEY_SD_TOTAL_DEPTH, 1.0, 1, r' mm', 'D\\_final') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Top Flange Width, $b_{tf}$} & '
+        + _ov(od, KEY_SD_TOP_FLANGE_WIDTH, 1.0, 1, r' mm', 'b\\_tf') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Top Flange Thickness, $t_{tf}$} & '
+        + _ov(od, KEY_SD_TOP_FLANGE_THICKNESS, 1.0, 1, r' mm', 't\\_tf') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Web Thickness, $t_w$} & '
+        + _ov(od, KEY_SD_WEB_THICKNESS, 1.0, 1, r' mm', 't\\_w') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Gross Area of Steel Section, A (cm$^2$)} & '
+        + _ov(od, KEY_SD_SECTION_PROP_AREA, 1e4, 2, r' cm$^2$', 'A') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Moment of Inertia, $I_z$ (cm$^4$)} & '
+        + _ov(od, KEY_SD_SECTION_PROP_IZ, 1e8, 2, r' cm$^4$', 'Iz') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Elastic Section Modulus, $Z_{ez}$ (cm$^3$)} & '
+        + _ov(od, KEY_SD_SECTION_PROP_ZZ, 1e6, 2, r' cm$^3$', 'Zez') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Plastic Section Modulus, $Z_{pz}$ (cm$^3$)} & '
+        + _ov(od, KEY_SD_SECTION_PROP_ZUZ, 1e6, 2, r' cm$^3$', 'Zpz') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Effective Width of Slab, $b_{eff}$ (mm)} & '
+        + _ov(od, KEY_SD_EFFECTIVE_SLAB_WIDTH, 1.0, 1, r' mm (per IRC~22 Cl.~603.2)', 'b\\_eff') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Short-term Composite $I_z$ (cm$^4$)} & '
+        + _ov(od, KEY_SD_COMPOSITE_IZ, 1e-4, 2, r' cm$^4$ (modular ratio $m = E_s/E_c$)', 'I\\_{z,comp}') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+        r'\textbf{Depth to Plastic Neutral Axis (mm)} & '
+        + _ov(od, KEY_SD_PLASTIC_NEUTRAL_AXIS_MM, 1.0, 1, r' mm (from top of slab)', 'xu') + r' \\[6pt]' + '\n'
+        + r'\hline' + '\n'
+    )
+
     # Generate Table 5.13 rows
     g_summary_rows = []
-    for lbl, _ in _girder_labels(n_girders):
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         g_summary_rows.append(
             lbl + r""" & \placeholder{Check} & \placeholder{UR} & \placeholder{UR} & \placeholder{UR} & \placeholder{UR} & PASS / FAIL \\[6pt]
 \hline"""
@@ -1557,30 +1684,7 @@ This section presents all structural design checks performed by OsdagBridge. For
 \noindent\textbf{Table 5.1  Girder Section Properties (Final Optimized / User-selected)}
 
 \begin{longtable}{|L{7.5cm}|p{8.0cm}|}
-\hline
-\textbf{Depth, D} & \placeholder{D\_final} mm \\[6pt]
-\hline
-\textbf{Flange Width, bf} & \placeholder{bf} mm (= 0.3 $\times$ \placeholder{D\_final}) \\[6pt]
-\hline
-\textbf{Flange Thickness, tf} & \placeholder{tf} mm (\placeholder{Formula}) \\[6pt]
-\hline
-\textbf{Web Thickness, tw} & \placeholder{tw} mm ($\approx$ d / 200) \\[6pt]
-\hline
-\textbf{Gross Area of Steel Section, A (cm²)} & \placeholder{A} \\[6pt]
-\hline
-\textbf{Moment of Inertia, Iz (cm$^4$)} & \placeholder{Iz} \\[6pt]
-\hline
-\textbf{Elastic Section Modulus, Zez (cm$^3$)} & \placeholder{Zez} \\[6pt]
-\hline
-\textbf{Plastic Section Modulus, Zpz (cm$^3$)} & \placeholder{Zpz} \\[6pt]
-\hline
-\textbf{Effective Width of Slab, b\_eff (mm)} & \placeholder{$b_{eff}$} (per IRC 22 Cl. 603.2) \\[6pt]
-\hline
-\textbf{Transformed Composite Iz (cm$^4$)} & \placeholder{$I_{z,comp}$} (modular ratio m = Es/Ec) \\[6pt]
-\hline
-\textbf{Depth to Plastic Neutral Axis (mm)} & \placeholder{xu} from top of slab \\[6pt]
-\hline
-\end{longtable}
+""" + t51_rows + r"""\end{longtable}
 
 \vspace{1em}
 \noindent\textbf{Table 5.2  Girder Section Classification}
