@@ -33,7 +33,7 @@ from .plot_generator import (
     build_nodes_members,
     figure_to_bytes,
 )
-
+from osdagbridge.core.utils.codes.irc6_2017 import IRC6_2017
 from osdagbridge.core.utils.common import (
     KEY_STRUCTURE_TYPE,
     KEY_PROJECT_LOCATION,
@@ -69,6 +69,11 @@ from osdagbridge.core.utils.common import (
     KEY_UTIL_FATIGUE,
     KEY_UTIL_LONG_TRANS_SHEAR,
     KEY_UTIL_STRESS_LIMITATION,
+    KEY_SL_IMPORTANCE_FACTOR, KEY_SL_SOIL_TYPE, KEY_SL_TIME_PERIOD,
+    KEY_SL_DAMPING, KEY_SL_RESPONSE_REDUCTION,
+    KEY_SL_DEAD_LOAD_MODE, KEY_SL_DEAD_LOAD_VALUE,
+    KEY_SL_LIVE_LOAD_MODE, KEY_SL_LIVE_LOAD_VALUE,
+    KEY_SL_HORIZONTAL_COEFF, KEY_SL_VERTICAL_COEFF,
     KEY_MD_WIDTH,
     KEY_RL_WIDTH,
     KEY_TS_DECK_OVERHANG,
@@ -329,9 +334,13 @@ class PlateGirderBridge:
         self.add_live_loads()
         self.add_wind_loads()
         self.add_temperature_load()
-        self.add_seismic_load()
+        # First analysis pass: DL + LL + WL + TL
         dataset = self.analyze()
+        # Governing LL (re-analyzes internally, sets governing_ll_name on grillage model)
         dataset = self.create_governing_ll_load_case(dataset, partial_safety_factor=1.0)
+        # Seismic loads — need the dead-load cases and governing_ll_name to be
+        # available; the EQ cases are analyzed by _reanalyze_with_dedup() below.
+        self.add_seismic_loads()
 
         self.create_dl_ll_combination(dl_factor=1.0, ll_factor=1.0)
         self.create_uls_combinations()
@@ -1476,26 +1485,102 @@ class PlateGirderBridge:
             partial_safety_factor=1.0,
         )
 
-    def add_seismic_load(self) -> None:
+    def add_seismic_loads(self) -> None:
         """
-        Apply seismic (earthquake) load to the grillage model as a patch load
-        over the full deck footprint per IRC:6-2017 Cl.219 / IS 1893 (Part 3).
+        Apply seismic load cases to the grillage model per IRC:6-2017 Cl. 218.
 
-        The load intensity is read from ``self.additional_inputs`` using the key
-        ``"seismic_load_kN_m2"``.  If the key is absent or zero the load is
-        silently skipped (seismic load is optional).
+        Must be called AFTER ``create_governing_ll_load_case()`` so that:
+          - the dead-load cases exist on the grillage model (total DL is
+            integrated from them on demand), and
+          - ``governing_ll_name`` is set so the governing vehicle weight can
+            be computed for the IRC 218.5.2 live-load fraction.
 
-        Delegates to BridgeGrillageModel.create_seismic_load().
+        Input sources
+        -------------
+        ``KEY_PROJECT_LOCATION`` : zone factor Z from ``weather_data['z_value']``.
+        ``KEY_SL_*``             : importance factor, soil type, time period,
+                                   damping, response reduction factor and the
+                                   UI-computed Ah / Av coefficients.
+        DL / LL                  : derived from model state, unless the seismic
+                                   tab's Custom mode supplies explicit values.
+
+        Load cases created (delegated to
+        BridgeGrillageModel.create_seismic_load_cases):
+          - ``"EQ_X"``            → Longitudinal seismic (0% LL)
+          - ``"EQ_Z"``            → Transverse seismic (20% LL)
+          - ``"EQ_Y"``            → Vertical seismic, Av = (2/3)×Ah (20% LL)
+          - ``"1.5 EQ (a/b/c)"``  → IRC 218.3 design combinations with γ = 1.5
         """
-        el_raw = self.additional_inputs.get("seismic_load_kN_m2")
-        if not el_raw:
-            return
-        el_kN_m2 = float(el_raw)
-        if el_kN_m2 == 0.0:
-            return
-        self.grillage_model.create_seismic_load(
-            seismic_load_kN_m2=el_kN_m2,
-            partial_safety_factor=1.0,
+        inp = self.input_dict
+
+        # ── Zone factor Z: from project-location weather_data ──
+        location = inp.get(KEY_PROJECT_LOCATION) or {}
+        if isinstance(location, str) and '{' in location:
+            import ast
+            try:
+                location = ast.literal_eval(location)
+            except (ValueError, SyntaxError):
+                location = {}
+        z_value = 0.10  # Zone II default (lowest hazard)
+        if isinstance(location, dict):
+            weather = location.get('weather_data') or {}
+            z_val = weather.get('z_value')
+            if z_val is not None:
+                z_value = float(z_val)
+
+        # ── Soil type from the seismic tab ──
+        soil_str = str(inp.get(KEY_SL_SOIL_TYPE) or "")
+        soil_type = 3 if "III" in soil_str else (2 if "II" in soil_str else 1)
+
+        # ── IRC 218 parameters from the seismic tab ──
+        def _to_float(key: str, default: float) -> float:
+            try:
+                return float(inp.get(key))
+            except (TypeError, ValueError):
+                return default
+
+        importance_factor = _to_float(KEY_SL_IMPORTANCE_FACTOR, 1.0)
+        damping_pct       = _to_float(KEY_SL_DAMPING, 2.0)
+        R                 = _to_float(KEY_SL_RESPONSE_REDUCTION, 1.0)
+        time_period       = _to_float(KEY_SL_TIME_PERIOD, 0.5)
+
+        # ── Ah and Av: use UI-computed values if present; else computed in
+        # the analyser from z_value / soil / T / damping ──
+        def _to_coeff(key: str) -> float | None:
+            try:
+                v = float(inp.get(key))
+                return v if v > 0 else None
+            except (TypeError, ValueError):
+                return None
+
+        Ah = _to_coeff(KEY_SL_HORIZONTAL_COEFF)
+        Av = _to_coeff(KEY_SL_VERTICAL_COEFF)
+
+        # ── DL / LL: Custom mode overrides; Automatic (default) derives them
+        # from model state inside create_seismic_load_cases() ──
+        def _custom_load(mode_key: str, value_key: str) -> float | None:
+            if str(inp.get(mode_key) or "Automatic") != "Custom":
+                return None
+            try:
+                return float(inp.get(value_key))
+            except (TypeError, ValueError):
+                return None
+
+        dead_load_kN = _custom_load(KEY_SL_DEAD_LOAD_MODE, KEY_SL_DEAD_LOAD_VALUE)
+        live_load_kN = _custom_load(KEY_SL_LIVE_LOAD_MODE, KEY_SL_LIVE_LOAD_VALUE)
+
+        self.grillage_model.create_seismic_load_cases(
+            z_value=z_value,
+            soil_type=soil_type,
+            importance_factor=importance_factor,
+            damping_percent=damping_pct,
+            response_reduction_factor=R,
+            time_period=time_period,
+            Ah=Ah,
+            Av=Av,
+            dead_load_kN=dead_load_kN,
+            live_load_kN=live_load_kN,
+            partial_safety_factor=1.5,  # IRC:6-2017 Table B.2 seismic ULS
         )
 
     def vehicle_lane_coordinates(self) -> list:
@@ -1775,38 +1860,13 @@ class PlateGirderBridge:
             analysis_results=results,
             print_report=True,
         )
+        self._dcr_engine = engine
         self.design_results = design_results
 
         # Write every output into output_dict while it is still mutable.
         # store_design_results also sets the KEY_UTIL_* values so the block
         # below is redundant — but kept for the _frontend.set_output_value calls.
         self.store_design_results(design_results)
-
-        # Keep frontend output-dock values in sync (these drive the percent bars).
-        dcr_by_id: dict[int, float] = {}
-        for c in engine.checks:
-            dcr_by_id[c.check_id] = max(dcr_by_id.get(c.check_id, 0.0), c.dcr)
-        self._frontend.set_output_value(KEY_UTIL_FLEXURE,          dcr_by_id.get(1,  0.0) * 100)
-        self._frontend.set_output_value(KEY_UTIL_SHEAR,            dcr_by_id.get(2,  0.0) * 100)
-        self._frontend.set_output_value(KEY_UTIL_INTERACTION,      dcr_by_id.get(3,  0.0) * 100)
-        self._frontend.set_output_value(KEY_UTIL_LTB,              dcr_by_id.get(5,  0.0) * 100)
-        defl_dcr = max(dcr_by_id.get(13, 0.0), dcr_by_id.get(14, 0.0), dcr_by_id.get(15, 0.0))
-        self._frontend.set_output_value(KEY_UTIL_DEFLECTION_CRACK,  defl_dcr * 100)
-        fatigue_dcr = max(dcr_by_id.get(8, 0.0), dcr_by_id.get(9, 0.0))
-        self._frontend.set_output_value(KEY_UTIL_FATIGUE,           fatigue_dcr * 100)
-        trans_shear_dcr = max(dcr_by_id.get(16, 0.0), dcr_by_id.get(17, 0.0))
-        self._frontend.set_output_value(KEY_UTIL_LONG_TRANS_SHEAR,  trans_shear_dcr * 100)
-        stress_dcr = max(dcr_by_id.get(10, 0.0), dcr_by_id.get(11, 0.0), dcr_by_id.get(12, 0.0))
-        self._frontend.set_output_value(KEY_UTIL_STRESS_LIMITATION, stress_dcr * 100)
-
-        self.output_dict[KEY_UTIL_FLEXURE]           = dcr_by_id.get(1,  0.0) * 100
-        self.output_dict[KEY_UTIL_SHEAR]             = dcr_by_id.get(2,  0.0) * 100
-        self.output_dict[KEY_UTIL_INTERACTION]       = dcr_by_id.get(3,  0.0) * 100
-        self.output_dict[KEY_UTIL_LTB]               = dcr_by_id.get(5,  0.0) * 100
-        self.output_dict[KEY_UTIL_DEFLECTION_CRACK]  = defl_dcr * 100
-        self.output_dict[KEY_UTIL_FATIGUE]           = fatigue_dcr * 100
-        self.output_dict[KEY_UTIL_LONG_TRANS_SHEAR]  = trans_shear_dcr * 100
-        self.output_dict[KEY_UTIL_STRESS_LIMITATION] = stress_dcr * 100
 
     def _design_cross_bracing_members(self) -> dict:
         """
@@ -2522,6 +2582,138 @@ class PlateGirderBridge:
         results = self.get_results_dataset()
         handler = PlateGirderAnalysisResults(dataset=results, bridge=self.grillage_model)
         return [str(lc) for lc in handler.get_available_loadcases()]
+    
+    def get_dcr_engine_for_selection(
+        self, girder_name: str | None, load_case: str | None
+    ) -> "DCREngine | None":
+        """
+        Single source of truth for DCR computation.
+        Returns a fully-run DCREngine for the given (girder, loadcase).
+        Both the Output Dock percent bars and the Steel Design check cards
+        call this — never compute DCR anywhere else.
+        """
+        from osdagbridge.core.bridge_types.plate_girder.designer import (
+            BridgeConfig, IRC22CapacityCalculator, DCREngine, DemandEnvelope,
+        )
+
+        dr = getattr(self, "design_results", None)
+        if not dr:
+            return None
+
+        per_girder = dr.get("per_girder", {})
+        if not per_girder:
+            return None
+
+        if girder_name and girder_name in per_girder:
+            girder_names = [girder_name]
+        else:
+            girder_names = list(per_girder)
+
+        try:
+            config = BridgeConfig.from_plate_girder_bridge(self)
+        except Exception:
+            return None
+
+        # Mirror the bearing reaction resolved during run_design_check so
+        # bearing stiffener checks fire here too (from_plate_girder_bridge
+        # always leaves bs_R_kN=0.0).
+        if config.stiffener is not None:
+            stored_r = dr.get("bs_R_kN", 0.0)
+            if stored_r and stored_r > 0.0:
+                config.stiffener.bs_R_kN = float(stored_r)
+                
+        best_engine = None
+
+        for g_name in girder_names:
+            g_data = per_girder.get(g_name, {})
+            per_lc = g_data.get("per_lc", {})
+            lc_demand = per_lc.get(load_case)
+            if not lc_demand:
+                continue
+
+            g_env = g_data.get("demand", {})
+
+            demand = DemandEnvelope(
+                Mu_kNm               = lc_demand.get("Mu_kNm",              0.0),
+                Vu_kN                = lc_demand.get("Vu_kN",               0.0),
+                Nu_kN                = lc_demand.get("Nu_kN",               0.0),
+                M_construction_kNm   = lc_demand.get("M_construction_kNm",  0.0),
+                M_girder_sw_kNm      = lc_demand.get("M_girder_sw_kNm",     0.0),
+                M_sls_kNm            = lc_demand.get("M_sls_kNm",           0.0),
+                V_sls_kN             = lc_demand.get("V_sls_kN",            0.0),
+                delta_live_mm        = lc_demand.get("delta_live_mm",       0.0),
+                delta_total_mm       = lc_demand.get("delta_total_mm",      0.0),
+                stress_range_MPa     = lc_demand.get("stress_range_MPa",    0.0),
+                shear_range_MPa      = lc_demand.get("shear_range_MPa",     0.0),
+                Mx_kNm               = lc_demand.get("Mx_kNm",              0.0),
+                My_kNm               = lc_demand.get("My_kNm",              0.0),
+                Vz_kN                = lc_demand.get("Vz_kN",               0.0),
+                Dx_mm                = lc_demand.get("Dx_mm",               0.0),
+                Dy_mm                = lc_demand.get("Dy_mm",               0.0),
+                Dz_mm                = lc_demand.get("Dz_mm",               0.0),
+                Vr_kN                = g_env.get("Vr_kN", 0.0),        # cross-LC aggregate → girder level
+                Nsc                  = int(dr.get("Nsc", 2_000_000)),  # config constant
+                governing_combination = load_case,
+                member               = g_name,
+                source               = "per_lc",
+                lc_type              = lc_demand.get("lc_type", ""),
+            )
+            try:
+                capacity = IRC22CapacityCalculator(config).compute_all(
+                    Vu_kN=demand.Vu_kN,
+                    stress_range_MPa=demand.stress_range_MPa,
+                    M_sls_kNm=demand.M_sls_kNm,
+                    V_sls_kN=demand.V_sls_kN,
+                    Vr_kN=demand.Vr_kN,
+                )
+                engine = DCREngine(demand, capacity)
+                engine.run_all_checks()
+
+                max_dcr  = engine.max_dcr()
+                best_max = best_engine.max_dcr() if best_engine else -1.0
+                if max_dcr > best_max:
+                    best_engine = engine
+            except Exception:
+                continue
+
+        return best_engine
+
+
+    def get_dcr_for_selection(
+        self, girder_name: str | None, load_case: str | None
+    ) -> dict[str, float]:
+        """
+        Return DCR percentages for the Output Dock percent bars.
+        Thin wrapper around get_dcr_engine_for_selection — no computation here.
+        """
+        from osdagbridge.core.utils.common import (
+            KEY_UTIL_FLEXURE, KEY_UTIL_SHEAR, KEY_UTIL_INTERACTION,
+            KEY_UTIL_LTB, KEY_UTIL_LONG_TRANS_SHEAR, KEY_UTIL_FATIGUE,
+            KEY_UTIL_STRESS_LIMITATION, KEY_UTIL_DEFLECTION_CRACK,
+        )
+
+        engine = self.get_dcr_engine_for_selection(girder_name, load_case)
+        if engine is None:
+            return {}
+
+        by_id: dict[int, float] = {}
+        for c in engine.checks:
+            if c.check_id not in by_id or c.dcr > by_id[c.check_id]:
+                by_id[c.check_id] = c.dcr
+
+        return {
+            KEY_UTIL_FLEXURE:           by_id.get(1,  0.0) * 100,
+            KEY_UTIL_SHEAR:             by_id.get(2,  0.0) * 100,
+            KEY_UTIL_INTERACTION:       max(by_id.get(3, 0.0), by_id.get(4, 0.0)) * 100,
+            KEY_UTIL_LTB:               by_id.get(5,  0.0) * 100,
+            KEY_UTIL_LONG_TRANS_SHEAR:  max(by_id.get(6,  0.0), by_id.get(7,  0.0),
+                                            by_id.get(16, 0.0), by_id.get(17, 0.0)) * 100,
+            KEY_UTIL_FATIGUE:           max(by_id.get(8,  0.0), by_id.get(9,  0.0)) * 100,
+            KEY_UTIL_STRESS_LIMITATION: max(by_id.get(10, 0.0), by_id.get(11, 0.0),
+                                            by_id.get(12, 0.0)) * 100,
+            KEY_UTIL_DEFLECTION_CRACK:  max(by_id.get(13, 0.0), by_id.get(14, 0.0),
+                                            by_id.get(15, 0.0)) * 100,
+        }
 
     def get_nodes_members(self) -> tuple[dict, dict]:
         """Return (nodes, members) dicts built from the active openseespy model."""
