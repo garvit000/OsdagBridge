@@ -229,9 +229,6 @@ class AdditionalInputs(QDialog):
         self.default_input_dict = input_dict
         self.working_input_dict = deepcopy(input_dict)
 
-        if hasattr(self, "_state_by_member_key"):
-            self._state_by_member_key.clear()
-
         self.typical_section_tab._sync_tab_active_states()
         self.set_defaults()
 
@@ -401,7 +398,66 @@ class AdditionalInputs(QDialog):
             if w:
                 w.setEnabled(not is_optimized)
 
-    def reset_active_tab_defaults(self) -> None:  # lifecycle: resets current tab's fields to default_input_dict values
+
+    # Greys out intermediate sub-fields when Intermediate Stiffener = No.
+    def _on_intermediate_stiffener_changed(self, value: str) -> None:
+        is_yes = str(value).strip() == "Yes"
+        for key in [
+            KEY_MP_STIFFENER_INTERMEDIATE_SPACING,
+            KEY_MP_STIFFENER_INTERMEDIATE_THICKNESS,
+            KEY_MP_STIFFENER_INTERMEDIATE_OUTSTAND,
+        ]:
+            w   = self.findChild(QWidget, key)
+            lbl = self.findChild(QLabel,  key + "_label")
+            if w:   w.setEnabled(is_yes)
+            if lbl: lbl.setEnabled(is_yes)
+        
+        # Update stiffener
+        self._update_stiffener_cad()
+    
+    def _update_apply_button_visibility(self, origin_key: str, target_widget: QWidget) -> None:
+        """Show/hide Apply Exterior or Apply Interior button based on selected girder index."""
+        
+        count = int(float(str(self.working_input_dict.get(KEY_TS_NO_OF_GIRDERS) or 1)))
+
+        combo = self.findChild(QComboBox, KEY_MP_GD_SELECT_GIRDER)
+        if combo is None:
+            return
+        idx = combo.currentIndex()
+        is_exterior = (count <= 1) or (idx == 0 or idx == count - 1)
+
+        widget_id = target_widget.objectName()
+        if widget_id == KEY_MP_GD_APPLY_EXTERIOR:
+            target_widget.setVisible(is_exterior)
+        elif widget_id == KEY_MP_GD_APPLY_INTERIOR:
+            target_widget.setVisible(not is_exterior)
+
+    # === Refresh Girder List in Member Properties ===========================================
+    # Connector: fires when origin field (e.g. KEY_TS_NO_OF_GIRDERS) editing finishes.
+    # Reads count from working_input_dict[origin_key], repopulates current_object combo.
+    def _on_girder_count_refreshed(self, origin_key: str, current_object: QComboBox) -> None:
+        
+        value = self.working_input_dict.get(origin_key)
+        if value is None:
+            return
+        
+        count = int(float(str(value)))
+        current = current_object.currentText()
+        current_object.clear()
+        for i in range(1, count + 1):
+            current_object.addItem(f"Girder {i}", f"G{i}")
+        idx = current_object.findText(current)
+        current_object.setCurrentIndex(idx if idx >= 0 else 0)
+        print(f"@@: Update Girder List")
+
+    def _update_stiffener_cad(self) -> None:
+        from osdagbridge.desktop.ui.dialogs.additional_input.drawings.stiffener_details_cad import StiffenerDetailsCad
+        widget = self.findChild(StiffenerDetailsCad, "stiffener_cad_preview")
+        if widget is None:
+            return
+        widget.update_stiffener(self.working_input_dict)
+
+    def reset_active_tab_defaults(self) -> None:
         """
         Reset only the currently active tab's fields to their default values
         sourced from default_input_dict (populated from defaults.py at startup).
@@ -1243,9 +1299,25 @@ class AdditionalInputs(QDialog):
             elif isinstance(w, QLineEdit):
                 w.setText(str(stored))
 
-    def _update_stiffener_cad(self) -> None:  # compute: pushes current working_input_dict and active member ID to the Stiffener Details CAD widget
-        from osdagbridge.desktop.ui.dialogs.additional_input.drawings.stiffener_details_cad import StiffenerDetailsCad
-        widget = self.findChild(StiffenerDetailsCad, KEY_SD_STIFFENER_DETAILS)
+    # Connector on_editing_finished for No of Girders (Typical Section Tab) → refresh Select Girder combo (Member Properties Tab)
+    def on_no_of_girders_changed(self):
+
+        # Update Dynamic Keys in Working Dict for Member Properties Tab
+        from osdagbridge.core.bridge_types.plate_girder.defaults import _on_no_of_girders_changed
+        from pprint import pprint
+        print(f"\n\n@@: Dict before updating dynamic keys:\n")
+        # pprint(self.working_input_dict)
+        # print("\n\n")
+        _on_no_of_girders_changed(self.working_input_dict)
+        print(f"\n\n@@: Dict after updating dynamic keys:\n")
+        # pprint(self.working_input_dict)
+        # print("\n\n")
+
+    # Update CAD Method for Support Conditions Tab Drawing
+    # This function is implicitly connected using Schema of the Tab
+    def _update_support_detail_cad(self):
+        from osdagbridge.desktop.ui.dialogs.additional_input.drawings.support_detail_cad import SupportDetailCADWidget
+        widget = self.findChild(SupportDetailCADWidget, KEY_SC_RIGHT_CAD)
         if widget is None:
             return
         combo = self.findChild(QComboBox, KEY_MP_STIFFENER_SELECT_MEMBER_ID)
@@ -1423,6 +1495,48 @@ class AdditionalInputs(QDialog):
         _on_no_of_girders_changed(self.working_input_dict)
 
     # ── Public API ────────────────────────────────────────────────────────────────
+        
+    def _enforce_decimal_places(self, places=2):
+        """Force all QDoubleValidator instances in this dialog to the given decimal places."""
+        for line_edit in self.findChildren(QLineEdit):
+            validator = line_edit.validator()
+            if isinstance(validator, QDoubleValidator):
+                # Only enforce standard notation decimals if it's not explicitly scientific
+                if validator.notation() != QDoubleValidator.ScientificNotation:
+                    validator.setDecimals(places)
+                    validator.setNotation(QDoubleValidator.StandardNotation)
+
+    def _normalize_numeric_texts(self, places=2):
+        """Format any numeric QLineEdit text to the specified decimal places."""
+        fmt = f"{{:.{places}f}}"
+        for line_edit in self.findChildren(QLineEdit):
+            # Skip fields with scientific validators
+            validator = line_edit.validator()
+            if isinstance(validator, QDoubleValidator) and validator.notation() == QDoubleValidator.ScientificNotation:
+                continue
+                
+            text = line_edit.text().strip()
+            if not text:
+                continue
+            try:
+                val = float(text)
+                line_edit.setText(fmt.format(val))
+            except ValueError:
+                continue
+
+    def _sync_member_properties_girder_count(self) -> None:
+        """Push current girder count from Typical Section to Member Properties."""
+        try:
+            count_text = ""
+            if hasattr(self, "typical_section_tab") and hasattr(self.typical_section_tab, "no_of_girders"):
+                count_text = str(self.typical_section_tab.no_of_girders.text() or "").strip()
+            if not count_text:
+                return
+            count = int(float(count_text))
+            if hasattr(self, "section_properties_tab") and hasattr(self.section_properties_tab, "set_girder_count"):
+                self.section_properties_tab.set_girder_count(count)
+        except Exception:
+            pass
 
     def get_all_values(self):  # public API: collects all CAD-relevant numeric parameters from the Typical Section Details tab
         """
@@ -1547,13 +1661,12 @@ class AdditionalInputs(QDialog):
 
         # ---- Cross bracing spacing (Section Properties tab) ----
         try:
-            bracing_tab = self.section_properties_tab.cross_bracing_tab
-            spacing_w = bracing_tab._spacing_input
-            if spacing_w is not None and spacing_w.text():
-                values[KEY_MP_CB_SPACING] = float(spacing_w.text())
+            bracing_tab = self.section_properties_tab.cross_bracing_details_tab
+            if hasattr(bracing_tab, "bracing_spacing") and bracing_tab.bracing_spacing.text():
+                values[KEY_MP_CB_SPACING] = float(bracing_tab.bracing_spacing.text())
+            
         except Exception:
             pass
-
 
         # Keep Member Properties member/pair dropdowns aligned with restored girder count.
         self._sync_member_properties_girder_count()
