@@ -161,6 +161,65 @@ from osdagbridge.core.utils.common import (
     KEY_REPORT_MP_KNM,
     KEY_REPORT_MD_KNM,
     KEY_REPORT_GOVERNING_LC,
+    KEY_REPORT_VU_KN,
+    KEY_REPORT_AV_MM2,
+    KEY_REPORT_VN_KN,
+    KEY_REPORT_VD_KN,
+    KEY_REPORT_SHEAR_STATUS,
+    KEY_REPORT_HIGH_SHEAR,
+    KEY_REPORT_MDV_KNM,
+    KEY_REPORT_BETA,
+    KEY_REPORT_INTERACTION_STATUS,
+    KEY_REPORT_MCR_KNM,
+    KEY_REPORT_LAMBDA_LT,
+    KEY_REPORT_CHI_LT,
+    KEY_REPORT_MB_KNM,
+    KEY_REPORT_LTB_STATUS,
+    KEY_REPORT_IS_TQ_MM,
+    KEY_REPORT_IS_H_MM,
+    KEY_REPORT_IS_C_MM,
+    KEY_REPORT_IS_N_SIDES,
+    KEY_REPORT_BS_TQ_MM,
+    KEY_REPORT_BS_H_MM,
+    KEY_REPORT_IS_IYS_MIN_MM4,
+    KEY_REPORT_IS_IYS_PROV_MM4,
+    KEY_REPORT_IS_FQ_KN,
+    KEY_REPORT_IS_FQD_KN,
+    KEY_REPORT_BS_R_KN,
+    KEY_REPORT_BS_FCD_KN,
+    KEY_REPORT_DEFL_LIM_LIVE_MM,
+    KEY_REPORT_DEFL_LIVE_MM,
+    KEY_REPORT_DEFL_LIVE_STATUS,
+    KEY_REPORT_DEFL_LIM_TOTAL_MM,
+    KEY_REPORT_DEFL_TOTAL_MM,
+    KEY_REPORT_DEFL_TOTAL_STATUS,
+    KEY_REPORT_SIGMA_C_LIMIT,
+    KEY_REPORT_SIGMA_C_ACTUAL,
+    KEY_REPORT_STRESS_C_STATUS,
+    KEY_REPORT_SIGMA_S_LIMIT,
+    KEY_REPORT_SIGMA_S_ACTUAL,
+    KEY_REPORT_STRESS_S_STATUS,
+    KEY_REPORT_F_FD_EFF,
+    KEY_REPORT_STRESS_RANGE,
+    KEY_REPORT_TAU_FD_EFF,
+    KEY_REPORT_SHEAR_RANGE,
+    KEY_REPORT_NSC,
+    KEY_REPORT_GOVERNING_CHECK,
+    KEY_REPORT_OVERALL_STATUS,
+    KEY_REPORT_QU_KN,
+    KEY_REPORT_QR_KN,
+    KEY_REPORT_STUD_SP_ULS,
+    KEY_REPORT_STUD_SP_FULL,
+    KEY_REPORT_STUD_SP_FATIGUE,
+    KEY_REPORT_STUD_SP_MAX,
+    KEY_REPORT_STUD_SP_PROV,
+    KEY_REPORT_STUD_DETAIL_OK,
+    KEY_REPORT_VL_N_PER_MM,
+    KEY_REPORT_TRANS_SHEAR_OK,
+    KEY_REPORT_AST_REQUIRED,
+    KEY_REPORT_AST_PROVIDED,
+    KEY_REPORT_STUD_DIA_MM,
+    KEY_REPORT_TF_TOP_MM,
     # Stiffener table
     KEY_SD_STIFFENER_ROW_INTERMEDIATE,
     KEY_SD_STIFFENER_ROW_LONGITUDINAL,
@@ -2985,6 +3044,109 @@ class PlateGirderBridge:
         out[KEY_REPORT_MP_KNM]          = dr.get("Mp_kNm", 0.0)
         out[KEY_REPORT_MD_KNM]          = dr.get("Md_kNm", 0.0)
         out[KEY_REPORT_GOVERNING_LC]    = dr.get("governing_combination", "")
+
+        # Worst status (FAIL > WARN > PASS) across all checks sharing a check_id.
+        # dr["checks"] is the controlling girder's check list (same as the
+        # Design Check tab); used to fill the PASS/FAIL cells in Tables 5.4–5.12.
+        _status_rank = {"FAIL": 2, "WARN": 1, "PASS": 0}
+        def _chk_status(*ids):
+            worst, rank = "", -1
+            for c in dr.get("checks", []):
+                if c.get("check_id") in ids:
+                    r = _status_rank.get(c.get("status", ""), -1)
+                    if r > rank:
+                        worst, rank = c.get("status", ""), r
+            return worst
+
+        Vu = dr.get("Vu_kN", 0.0)
+        Vd = dr.get("Vd_kN", 0.0)
+
+        # Table 5.4 (shear capacity)
+        out[KEY_REPORT_VU_KN]        = Vu
+        out[KEY_REPORT_AV_MM2]       = dr.get("Av_mm2", 0.0)
+        out[KEY_REPORT_VN_KN]        = dr.get("Vn_kN", 0.0)
+        out[KEY_REPORT_VD_KN]        = Vd
+        out[KEY_REPORT_SHEAR_STATUS] = _chk_status(2)
+
+        # Table 5.5 (bending-shear interaction)
+        out[KEY_REPORT_HIGH_SHEAR]   = "Yes" if (Vd and Vu > 0.6 * Vd) else "No"
+        out[KEY_REPORT_MDV_KNM]      = dr.get("Mdv_kNm", 0.0)
+        out[KEY_REPORT_BETA]         = dr.get("beta_interaction", 0.0)
+        out[KEY_REPORT_INTERACTION_STATUS] = _chk_status(3, 4)
+
+        # Table 5.6 (lateral torsional buckling)
+        out[KEY_REPORT_MCR_KNM]      = dr.get("Mcr_kNm", 0.0)
+        out[KEY_REPORT_LAMBDA_LT]    = dr.get("lambda_LT", 0.0)
+        out[KEY_REPORT_CHI_LT]       = dr.get("chi_LT", 0.0)
+        out[KEY_REPORT_MB_KNM]       = dr.get("Mb_kNm", 0.0)
+        out[KEY_REPORT_LTB_STATUS]   = _chk_status(5)
+
+        # Table 5.7 (stiffener geometry)
+        out[KEY_REPORT_IS_TQ_MM]     = dr.get("is_tq_mm", 0.0)
+        out[KEY_REPORT_IS_H_MM]      = dr.get("is_H_mm", 0.0)
+        out[KEY_REPORT_IS_C_MM]      = dr.get("is_c_mm", 0.0)
+        out[KEY_REPORT_IS_N_SIDES]   = dr.get("is_n_sides", 0)
+        out[KEY_REPORT_BS_TQ_MM]     = dr.get("bs_tq_mm", 0.0)
+        out[KEY_REPORT_BS_H_MM]      = dr.get("bs_H_mm", 0.0)
+
+        # Table 5.8 (intermediate stiffener checks)
+        out[KEY_REPORT_IS_IYS_MIN_MM4]  = dr.get("is_Iys_min_mm4", 0.0)
+        out[KEY_REPORT_IS_IYS_PROV_MM4] = dr.get("is_Iys_prov_mm4", 0.0)
+        out[KEY_REPORT_IS_FQ_KN]        = dr.get("is_Fq_kN", 0.0)
+        out[KEY_REPORT_IS_FQD_KN]       = dr.get("is_Fqd_kN", 0.0)
+
+        # Table 5.9 (end panel / bearing stiffener checks)
+        out[KEY_REPORT_BS_R_KN]      = dr.get("bs_R_kN", 0.0)
+        out[KEY_REPORT_BS_FCD_KN]    = dr.get("bs_Fcd_kN", 0.0)
+
+        # Table 5.10 (deflection)
+        out[KEY_REPORT_DEFL_LIM_LIVE_MM]  = dr.get("defl_limit_live_mm", 0.0)
+        out[KEY_REPORT_DEFL_LIVE_MM]      = dr.get("delta_live_mm", 0.0)
+        out[KEY_REPORT_DEFL_LIVE_STATUS]  = _chk_status(13)
+        out[KEY_REPORT_DEFL_LIM_TOTAL_MM] = dr.get("defl_limit_total_mm", 0.0)
+        out[KEY_REPORT_DEFL_TOTAL_MM]     = dr.get("delta_total_mm", 0.0)
+        out[KEY_REPORT_DEFL_TOTAL_STATUS] = _chk_status(14)
+
+        # Table 5.11 (stress limitation)
+        out[KEY_REPORT_SIGMA_C_LIMIT]   = dr.get("sigma_c_limit_MPa", 0.0)
+        out[KEY_REPORT_SIGMA_C_ACTUAL]  = dr.get("sigma_c_actual_MPa", 0.0)
+        out[KEY_REPORT_STRESS_C_STATUS] = _chk_status(10)
+        out[KEY_REPORT_SIGMA_S_LIMIT]   = dr.get("sigma_s_limit_MPa", 0.0)
+        out[KEY_REPORT_SIGMA_S_ACTUAL]  = dr.get("sigma_steel_equiv_MPa", 0.0)
+        out[KEY_REPORT_STRESS_S_STATUS] = _chk_status(11)
+
+        # Table 5.12 (fatigue)
+        out[KEY_REPORT_F_FD_EFF]     = dr.get("f_fd_eff_MPa", 0.0)
+        out[KEY_REPORT_STRESS_RANGE] = dr.get("stress_range_MPa", 0.0)
+        out[KEY_REPORT_TAU_FD_EFF]   = dr.get("tau_fd_eff_MPa", 0.0)
+        out[KEY_REPORT_SHEAR_RANGE]  = dr.get("shear_range_MPa", 0.0)
+        out[KEY_REPORT_NSC]          = dr.get("Nsc", 0)
+
+        # Table 5.13 (overall summary, controlling girder)
+        _checks = dr.get("checks", [])
+        _gov = max(_checks, key=lambda c: c.get("dcr", 0.0), default=None)
+        out[KEY_REPORT_GOVERNING_CHECK] = _gov.get("name", "") if _gov else ""
+        out[KEY_REPORT_OVERALL_STATUS]  = dr.get("overall_status", "")
+
+        # Table 5.14 (shear connector capacity)
+        out[KEY_REPORT_QU_KN]        = dr.get("Qu_kN", 0.0)
+        out[KEY_REPORT_QR_KN]        = dr.get("Qr_kN", 0.0)
+
+        # Table 5.15 (shear connector spacing)
+        out[KEY_REPORT_STUD_SP_ULS]     = dr.get("stud_spacing_uls_mm", 0.0)
+        out[KEY_REPORT_STUD_SP_FULL]    = dr.get("stud_spacing_full_shear_mm", 0.0)
+        out[KEY_REPORT_STUD_SP_FATIGUE] = dr.get("stud_spacing_fatigue_mm", 0.0)
+        out[KEY_REPORT_STUD_SP_MAX]     = dr.get("stud_spacing_max_mm", 0.0)
+        out[KEY_REPORT_STUD_SP_PROV]    = dr.get("stud_spacing_provided_mm", 0.0)
+        out[KEY_REPORT_STUD_DETAIL_OK]  = "PASS" if dr.get("stud_detailing_ok") else "FAIL"
+
+        # Table 5.16 (transverse shear and detailing)
+        out[KEY_REPORT_VL_N_PER_MM]    = dr.get("VL_N_per_mm", 0.0)
+        out[KEY_REPORT_TRANS_SHEAR_OK] = "PASS" if dr.get("transverse_shear_ok") else "FAIL"
+        out[KEY_REPORT_AST_REQUIRED]   = dr.get("Ast_required_cm2_per_m", 0.0)
+        out[KEY_REPORT_AST_PROVIDED]   = dr.get("Ast_provided_cm2_per_m", 0.0)
+        out[KEY_REPORT_STUD_DIA_MM]    = dr.get("stud_dia_mm", 0.0)
+        out[KEY_REPORT_TF_TOP_MM]      = dr.get("tf_top_mm", 0.0)
 
         # ── 3. Shear connector card ─────────────────────────────────────────────
         # All stud dimensions in mm; strengths in MPa; count and spacing as numbers.

@@ -1053,6 +1053,91 @@ KEY_REPORT_MP_KNM          = "report.flexure.mp_knm"              # plastic mome
 KEY_REPORT_MD_KNM          = "report.flexure.md_knm"              # design moment capacity Md, kNm
 KEY_REPORT_GOVERNING_LC    = "report.flexure.governing_lc"        # governing load combination
 
+# Table 5.4 — Shear Capacity (controlling girder)
+KEY_REPORT_VU_KN           = "report.shear.vu_kn"                 # applied shear Vu, kN
+KEY_REPORT_AV_MM2          = "report.shear.av_mm2"               # shear area Av, mm²
+KEY_REPORT_VN_KN           = "report.shear.vn_kn"                 # nominal shear Vn, kN
+KEY_REPORT_VD_KN           = "report.shear.vd_kn"                 # design shear capacity Vd, kN
+KEY_REPORT_SHEAR_STATUS    = "report.shear.status"               # PASS / FAIL
+
+# Table 5.5 — Bending-Shear Interaction (controlling girder)
+KEY_REPORT_HIGH_SHEAR      = "report.interaction.high_shear"      # "Yes" / "No" (Vu > 0.6 Vd)
+KEY_REPORT_MDV_KNM         = "report.interaction.mdv_knm"         # reduced moment capacity Mdv, kNm
+KEY_REPORT_BETA            = "report.interaction.beta"            # interaction factor β
+KEY_REPORT_INTERACTION_STATUS = "report.interaction.status"      # PASS / FAIL
+
+# Table 5.6 — Lateral Torsional Buckling (controlling girder)
+KEY_REPORT_MCR_KNM         = "report.ltb.mcr_knm"                 # elastic critical moment Mcr, kNm
+KEY_REPORT_LAMBDA_LT       = "report.ltb.lambda_lt"              # non-dim slenderness λ_LT
+KEY_REPORT_CHI_LT          = "report.ltb.chi_lt"                 # LTB reduction factor χ_LT
+KEY_REPORT_MB_KNM          = "report.ltb.mb_knm"                 # LTB resistance Mb, kNm
+KEY_REPORT_LTB_STATUS      = "report.ltb.status"                 # PASS / FAIL
+
+# Table 5.7 — Stiffener Design Summary (geometry)
+KEY_REPORT_IS_TQ_MM        = "report.stiffener.is_tq_mm"          # intermediate stiffener thickness, mm
+KEY_REPORT_IS_H_MM         = "report.stiffener.is_h_mm"           # intermediate stiffener height, mm
+KEY_REPORT_IS_C_MM         = "report.stiffener.is_c_mm"           # intermediate stiffener spacing, mm
+KEY_REPORT_IS_N_SIDES      = "report.stiffener.is_n_sides"        # number of stiffener sides
+KEY_REPORT_BS_TQ_MM        = "report.stiffener.bs_tq_mm"          # bearing stiffener thickness, mm
+KEY_REPORT_BS_H_MM         = "report.stiffener.bs_h_mm"           # bearing stiffener height, mm
+
+# Table 5.8 — Intermediate Stiffener Checks
+KEY_REPORT_IS_IYS_MIN_MM4  = "report.stiffener.is_iys_min_mm4"    # required min. MOI Iys,min, mm⁴
+KEY_REPORT_IS_IYS_PROV_MM4 = "report.stiffener.is_iys_prov_mm4"   # provided MOI Iys, mm⁴
+KEY_REPORT_IS_FQ_KN        = "report.stiffener.is_fq_kn"          # applied stiffener force Fq, kN
+KEY_REPORT_IS_FQD_KN       = "report.stiffener.is_fqd_kn"         # stiffener buckling resistance Fqd, kN
+
+# Table 5.9 — End Panel / Bearing Stiffener Checks
+KEY_REPORT_BS_R_KN         = "report.stiffener.bs_r_kn"           # bearing reaction R, kN
+KEY_REPORT_BS_FCD_KN       = "report.stiffener.bs_fcd_kn"         # bearing stiffener capacity Fcd, kN
+
+# Table 5.10 — Deflection (controlling girder)
+KEY_REPORT_DEFL_LIM_LIVE_MM  = "report.deflection.limit_live_mm"   # allowable live deflection (L/800), mm
+KEY_REPORT_DEFL_LIVE_MM      = "report.deflection.actual_live_mm"  # actual live deflection, mm
+KEY_REPORT_DEFL_LIVE_STATUS  = "report.deflection.live_status"     # PASS / FAIL
+KEY_REPORT_DEFL_LIM_TOTAL_MM = "report.deflection.limit_total_mm"  # allowable total deflection (L/600), mm
+KEY_REPORT_DEFL_TOTAL_MM     = "report.deflection.actual_total_mm" # actual total deflection, mm
+KEY_REPORT_DEFL_TOTAL_STATUS = "report.deflection.total_status"    # PASS / FAIL
+
+# Table 5.11 — Maximum Stress Limitation (controlling girder)
+KEY_REPORT_SIGMA_C_LIMIT   = "report.stress.sigma_c_limit"        # allowable concrete stress, MPa
+KEY_REPORT_SIGMA_C_ACTUAL  = "report.stress.sigma_c_actual"       # actual concrete stress, MPa
+KEY_REPORT_STRESS_C_STATUS = "report.stress.c_status"             # PASS / FAIL
+KEY_REPORT_SIGMA_S_LIMIT   = "report.stress.sigma_s_limit"        # allowable steel stress, MPa
+KEY_REPORT_SIGMA_S_ACTUAL  = "report.stress.sigma_s_actual"       # actual steel equivalent stress, MPa
+KEY_REPORT_STRESS_S_STATUS = "report.stress.s_status"             # PASS / FAIL
+
+# Table 5.12 — Fatigue Assessment (controlling girder)
+KEY_REPORT_F_FD_EFF        = "report.fatigue.f_fd_eff"            # allowable normal stress range ffd, MPa
+KEY_REPORT_STRESS_RANGE    = "report.fatigue.stress_range"       # actual normal stress range, MPa
+KEY_REPORT_TAU_FD_EFF      = "report.fatigue.tau_fd_eff"         # allowable shear stress range, MPa
+KEY_REPORT_SHEAR_RANGE     = "report.fatigue.shear_range"        # actual shear stress range, MPa
+KEY_REPORT_NSC             = "report.fatigue.nsc"                # number of stress cycles Nsc
+
+# Table 5.13 — Girder Design Summary (controlling girder overall status)
+KEY_REPORT_GOVERNING_CHECK = "report.summary.governing_check"     # name of governing (highest-DCR) check
+KEY_REPORT_OVERALL_STATUS  = "report.summary.overall_status"      # PASS / FAIL
+
+# Table 5.14 — Shear Connector Capacity
+KEY_REPORT_QU_KN           = "report.stud.qu_kn"                  # design stud resistance Qu, kN
+KEY_REPORT_QR_KN           = "report.stud.qr_kn"                  # fatigue stud resistance Qr, kN
+
+# Table 5.15 — Shear Connector Spacing
+KEY_REPORT_STUD_SP_ULS     = "report.stud.spacing_uls_mm"         # ULS shear spacing SL1, mm
+KEY_REPORT_STUD_SP_FULL    = "report.stud.spacing_full_mm"        # full-composite spacing SL2, mm
+KEY_REPORT_STUD_SP_FATIGUE = "report.stud.spacing_fatigue_mm"     # fatigue spacing SR, mm
+KEY_REPORT_STUD_SP_MAX     = "report.stud.spacing_max_mm"         # max spacing limit, mm
+KEY_REPORT_STUD_SP_PROV    = "report.stud.spacing_prov_mm"        # provided spacing, mm
+KEY_REPORT_STUD_DETAIL_OK  = "report.stud.detailing_ok"          # detailing PASS / FAIL
+
+# Table 5.16 — Transverse Shear and Detailing
+KEY_REPORT_VL_N_PER_MM     = "report.trans.vl_n_per_mm"           # longitudinal shear per unit length VL, N/mm
+KEY_REPORT_TRANS_SHEAR_OK  = "report.trans.shear_ok"             # transverse shear PASS / FAIL
+KEY_REPORT_AST_REQUIRED    = "report.trans.ast_required"         # required transverse reinf, cm²/m
+KEY_REPORT_AST_PROVIDED    = "report.trans.ast_provided"         # provided transverse reinf, cm²/m
+KEY_REPORT_STUD_DIA_MM     = "report.trans.stud_dia_mm"          # stud diameter, mm
+KEY_REPORT_TF_TOP_MM       = "report.trans.tf_top_mm"            # top flange thickness, mm
+
 # Value Lists for Additional Inputs
 VALUES_NO_YES = ["No", "Yes"]
 VALUES_REINF_MATERIAL = ["Fe 415", "Fe 500", "Fe 550"]

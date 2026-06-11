@@ -156,8 +156,71 @@ from osdagbridge.core.utils.common import (
     KEY_REPORT_MP_KNM,
     KEY_REPORT_MD_KNM,
     KEY_REPORT_GOVERNING_LC,
+    KEY_REPORT_VU_KN,
+    KEY_REPORT_AV_MM2,
+    KEY_REPORT_VN_KN,
+    KEY_REPORT_VD_KN,
+    KEY_REPORT_SHEAR_STATUS,
+    KEY_REPORT_HIGH_SHEAR,
+    KEY_REPORT_MDV_KNM,
+    KEY_REPORT_BETA,
+    KEY_REPORT_INTERACTION_STATUS,
+    KEY_REPORT_MCR_KNM,
+    KEY_REPORT_LAMBDA_LT,
+    KEY_REPORT_CHI_LT,
+    KEY_REPORT_MB_KNM,
+    KEY_REPORT_LTB_STATUS,
+    KEY_REPORT_IS_TQ_MM,
+    KEY_REPORT_IS_H_MM,
+    KEY_REPORT_IS_C_MM,
+    KEY_REPORT_IS_N_SIDES,
+    KEY_REPORT_BS_TQ_MM,
+    KEY_REPORT_BS_H_MM,
+    KEY_REPORT_IS_IYS_MIN_MM4,
+    KEY_REPORT_IS_IYS_PROV_MM4,
+    KEY_REPORT_IS_FQ_KN,
+    KEY_REPORT_IS_FQD_KN,
+    KEY_REPORT_BS_R_KN,
+    KEY_REPORT_BS_FCD_KN,
+    KEY_REPORT_DEFL_LIM_LIVE_MM,
+    KEY_REPORT_DEFL_LIVE_MM,
+    KEY_REPORT_DEFL_LIVE_STATUS,
+    KEY_REPORT_DEFL_LIM_TOTAL_MM,
+    KEY_REPORT_DEFL_TOTAL_MM,
+    KEY_REPORT_DEFL_TOTAL_STATUS,
+    KEY_REPORT_SIGMA_C_LIMIT,
+    KEY_REPORT_SIGMA_C_ACTUAL,
+    KEY_REPORT_STRESS_C_STATUS,
+    KEY_REPORT_SIGMA_S_LIMIT,
+    KEY_REPORT_SIGMA_S_ACTUAL,
+    KEY_REPORT_STRESS_S_STATUS,
+    KEY_REPORT_F_FD_EFF,
+    KEY_REPORT_STRESS_RANGE,
+    KEY_REPORT_TAU_FD_EFF,
+    KEY_REPORT_SHEAR_RANGE,
+    KEY_REPORT_NSC,
+    KEY_REPORT_GOVERNING_CHECK,
+    KEY_REPORT_OVERALL_STATUS,
+    KEY_REPORT_QU_KN,
+    KEY_REPORT_QR_KN,
+    KEY_REPORT_STUD_SP_ULS,
+    KEY_REPORT_STUD_SP_FULL,
+    KEY_REPORT_STUD_SP_FATIGUE,
+    KEY_REPORT_STUD_SP_MAX,
+    KEY_REPORT_STUD_SP_PROV,
+    KEY_REPORT_STUD_DETAIL_OK,
+    KEY_REPORT_VL_N_PER_MM,
+    KEY_REPORT_TRANS_SHEAR_OK,
+    KEY_REPORT_AST_REQUIRED,
+    KEY_REPORT_AST_PROVIDED,
+    KEY_REPORT_STUD_DIA_MM,
+    KEY_REPORT_TF_TOP_MM,
     # Utilization (percent values)
     KEY_UTIL_FLEXURE,
+    KEY_UTIL_SHEAR,
+    KEY_UTIL_INTERACTION,
+    KEY_UTIL_LTB,
+    KEY_UTIL_DEFLECTION_CRACK,
     # Shear Connector output keys (populated by store_design_results)
     KEY_SD_SHEAR_YIELD_STRENGTH,
     KEY_SD_SHEAR_ULTIMATE_STRENGTH,
@@ -1432,136 +1495,187 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
         )
     t53_content = "\n".join(t53_rows)
 
-    # Generate Table 5.4 rows
+    # Generate Table 5.4 rows — Shear Capacity (controlling-girder keys)
+    sh_vu  = _ov(od, KEY_REPORT_VU_KN, precision=2, fallback='Vu')
+    sh_av  = _ov(od, KEY_REPORT_AV_MM2, precision=1, fallback='Av')
+    sh_vn  = _ov(od, KEY_REPORT_VN_KN, precision=2, fallback='Vn')
+    sh_vd  = _ov(od, KEY_REPORT_VD_KN, precision=2, fallback='Vd')
+    sh_ur  = _ov(od, KEY_UTIL_SHEAR, 0.01, 3, fallback='UR')
+    sh_st  = _ov(od, KEY_REPORT_SHEAR_STATUS, fallback='PASS / FAIL')
     t54_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t54_rows.append(
-            r"\multirow{9}{*}{\makecell{" + lbl + r"""}} & Applied Shear, $V_u$ & from \placeholder{Load Case} & \placeholder{$V_u$} kN & --- \\[6pt]
-\cline{2-5}
- & Shear Area, Av & h $\times$ tw & \placeholder{$A_v$} mm² & --- \\[6pt]
-\cline{2-5}
- & Panel Aspect Ratio, c/d & --- & \placeholder{c/d} & --- \\[6pt]
-\cline{2-5}
- & Shear Buckling Coefficient, kv & 5.35 + 4 / (c/d)² & \placeholder{kv} & --- \\[6pt]
-\cline{2-5}
- & Web Slenderness, $\lambda_w$ & $\sqrt{f_{yw} / (\sqrt{3} \times \tau_{cr,e})}$ & \placeholder{$\lambda_w$} & --- \\[6pt]
-\cline{2-5}
- & Design Shear Stress, tau\_b & per IS 800 Cl. 8.4.2.2 & \placeholder{tb} MPa & --- \\[6pt]
-\cline{2-5}
- & Shear Buckling Resistance, Vcr & Av $\times$ tau\_b & \placeholder{$V_{cr}$} kN & --- \\[6pt]
-\cline{2-5}
- & Web Crippling Strength, Fg & (b1+n2) $\times$ tw $\times$ fy / $\gamma_{M0}$ & \placeholder{$F_g$} kN & PASS \\[6pt]
-\cline{2-5}
- & Utilization Ratio, $V_u / V_d$ & --- & \placeholder{UR} & $\leq 1.0$ \\[6pt]
-\hline"""
+            r"\multirow{5}{*}{\makecell{" + lbl + r"}} & Applied Shear, $V_u$ & from "
+            + gov_lc + r" & " + sh_vu + r" kN & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Shear Area, $A_v$ & $d_w \times t_w$ & " + sh_av + r" mm² & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Nominal Shear, $V_n$ & $A_v\,f_{yw}/\sqrt{3}$ & " + sh_vn + r" kN & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Design Shear Capacity, $V_d$ & $V_n / \gamma_{M0}$ & " + sh_vd + r" kN & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Utilization Ratio, $V_u / V_d$ & --- & " + sh_ur + r" & " + sh_st + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     t54_content = "\n".join(t54_rows)
 
-    # Generate Table 5.5 rows
+    # Generate Table 5.5 rows — Bending-Shear Interaction
+    mv_high = _ov(od, KEY_REPORT_HIGH_SHEAR, fallback='Yes / No')
+    mv_mdv  = _ov(od, KEY_REPORT_MDV_KNM, precision=2, fallback='Mdv')
+    mv_beta = _ov(od, KEY_REPORT_BETA, precision=3, fallback='beta')
+    mv_ur   = _ov(od, KEY_UTIL_INTERACTION, 0.01, 3, fallback='UR')
+    mv_st   = _ov(od, KEY_REPORT_INTERACTION_STATUS, fallback='PASS / FAIL')
     t55_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t55_rows.append(
-            r"\multirow{3}{*}{\makecell{" + lbl + r"""}} & High Shear Condition? & V > 0.6 Vd & Yes / No & --- \\[6pt]
-\cline{2-5}
- & Reduced Moment Capacity, $M_{dv}$ & $M_d - \beta(M_d - M_{fd})$ & \placeholder{$M_{dv Fluss}$} kN-m & --- \\[6pt]
-\cline{2-5}
- & Interaction Check: $M_u \leq M_{dv}$ & --- & PASS / FAIL & --- \\[6pt]
-\hline"""
+            r"\multirow{3}{*}{\makecell{" + lbl + r"}} & High Shear Condition? & $V_u > 0.6\,V_d$ & "
+            + mv_high + r" & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Reduced Moment Capacity, $M_{dv}$ & $M_d - \beta(M_d - M_{fd})$, $\beta = $ "
+            + mv_beta + r" & " + mv_mdv + r" kN-m & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Interaction Check: $M_u \leq M_{dv}$ & --- & " + mv_ur + r" & " + mv_st + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     t55_content = "\n".join(t55_rows)
 
-    # Generate Table 5.6 rows
+    # Generate Table 5.6 rows — Lateral Torsional Buckling
+    ltb_mcr = _ov(od, KEY_REPORT_MCR_KNM, precision=2, fallback='Mcr')
+    ltb_lam = _ov(od, KEY_REPORT_LAMBDA_LT, precision=3, fallback='lambda_LT')
+    ltb_chi = _ov(od, KEY_REPORT_CHI_LT, precision=3, fallback='chi_LT')
+    ltb_mb  = _ov(od, KEY_REPORT_MB_KNM, precision=2, fallback='Mb')
+    ltb_ur  = _ov(od, KEY_UTIL_LTB, 0.01, 3, fallback='UR')
+    ltb_st  = _ov(od, KEY_REPORT_LTB_STATUS, fallback='PASS / FAIL')
     t56_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t56_rows.append(
-            r"\multirow{5}{*}{\makecell{" + lbl + r"""}} & Elastic Critical Moment, Mcr & pi²EIy/LLT² $\times$ (GIt + pi²EIw/LLT²)\textasciicircum 0.5 & \placeholder{$M_{cr}$} kN-m & --- \\[6pt]
-\cline{2-5}
- & Non-dim. Slenderness, $\bar{\lambda}_{LT}$ & $\sqrt{M_p / M_{cr}}$ & \placeholder{$\bar{\lambda}_{LT}$} & --- \\[6pt]
-\cline{2-5}
- & LTB Reduction Factor, chi\_LT & IS 800 Cl. 8.2.2 & \placeholder{$\chi_{LT}$} & --- \\[6pt]
-\cline{2-5}
- & LTB Resistance, Mb & chi\_LT $\times$ Mp / $\gamma_{M0}$ & \placeholder{$M_b$} kN-m & --- \\[6pt]
-\cline{2-5}
- & $M_u \leq M_b$ & --- & PASS / FAIL & --- \\[6pt]
-\hline"""
+            r"\multirow{5}{*}{\makecell{" + lbl + r"}} & Elastic Critical Moment, $M_{cr}$ & "
+            + r"$\frac{\pi^2 E I_y}{L_{LT}^2}\sqrt{GI_t + \frac{\pi^2 E I_w}{L_{LT}^2}}$ & "
+            + ltb_mcr + r" kN-m & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Non-dim. Slenderness, $\bar{\lambda}_{LT}$ & $\sqrt{M_p / M_{cr}}$ & "
+            + ltb_lam + r" & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & LTB Reduction Factor, $\chi_{LT}$ & IS 800 Cl. 8.2.2 & "
+            + ltb_chi + r" & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & LTB Resistance, $M_b$ & $\chi_{LT} \times M_p / \gamma_{M0}$ & "
+            + ltb_mb + r" kN-m & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Utilization Ratio, $M_u / M_b$ & --- & " + ltb_ur + r" & " + ltb_st + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     t56_content = "\n".join(t56_rows)
 
-    # Generate Table 5.7 rows
+    # Generate Table 5.7 rows — Stiffener Design Summary (geometry)
+    st_is_tq = _ov(od, KEY_REPORT_IS_TQ_MM, precision=1, fallback='ts\\_i')
+    st_is_h  = _ov(od, KEY_REPORT_IS_H_MM, precision=1, fallback='hs\\_i')
+    st_is_c  = _ov(od, KEY_REPORT_IS_C_MM, precision=1, fallback='c')
+    st_is_n  = _ov(od, KEY_REPORT_IS_N_SIDES, precision=0, fallback='n')
+    st_bs_tq = _ov(od, KEY_REPORT_BS_TQ_MM, precision=1, fallback='ts\\_b')
+    st_bs_h  = _ov(od, KEY_REPORT_BS_H_MM, precision=1, fallback='hs\\_b')
     t57_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t57_rows.append(
-            r"\multirow{6}{*}{\makecell{" + lbl + r"""}} & \textbf{Shear Buckling Design Method} & Simple Post Critical / Tension Field \\[6pt]
-\cline{2-3}
- & \textbf{Intermediate Stiffener Thickness (mm)} & \placeholder{ts\_i} mm \\[6pt]
-\cline{2-3}
- & \textbf{Intermediate Stiffener Spacing (mm)} & \placeholder{c} mm \\[6pt]
-\cline{2-3}
- & \textbf{End Panel Stiffener Thickness (mm)} & \placeholder{ts\_e} mm \\[6pt]
-\cline{2-3}
- & \textbf{No. of End Panel Stiffeners} & \placeholder{Count} \\[6pt]
-\cline{2-3}
- & \textbf{Longitudinal Stiffeners} & Not Required / Required \\[6pt]
-\hline"""
+            r"\multirow{6}{*}{\makecell{" + lbl + r"}} & \textbf{Intermediate Stiffener Thickness (mm)} & "
+            + st_is_tq + r" mm \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Intermediate Stiffener Height (mm)} & " + st_is_h + r" mm \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Intermediate Stiffener Spacing, c (mm)} & " + st_is_c + r" mm \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{No. of Stiffener Sides} & " + st_is_n + r" \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Bearing Stiffener Thickness (mm)} & " + st_bs_tq + r" mm \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Bearing Stiffener Height (mm)} & " + st_bs_h + r" mm \\[6pt]" + "\n"
+            + r"\hline"
         )
     t57_content = "\n".join(t57_rows)
 
-    # Generate Table 5.8 rows
+    # Generate Table 5.8 rows — Intermediate Stiffener Checks (Required / Provided)
+    is_iys_min  = _ov(od, KEY_REPORT_IS_IYS_MIN_MM4, precision=0, fallback='Iys\\_min')
+    is_iys_prov = _ov(od, KEY_REPORT_IS_IYS_PROV_MM4, precision=0, fallback='Iys\\_prov')
+    is_fq       = _ov(od, KEY_REPORT_IS_FQ_KN, precision=2, fallback='Fq')
+    is_fqd      = _ov(od, KEY_REPORT_IS_FQD_KN, precision=2, fallback='Fqd')
     t58_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t58_rows.append(
-            r"\multirow{2}{*}{\makecell{" + lbl + r"""}} & Min. Moment of Inertia, Is & $\geq$ 0.75 d tw3$ = \placeholder{val} mm4$ & \placeholder{Is\_prov} mm4$ & PASS \\[6pt]
-\cline{2-5}
- & Critical Buckling Stress, tau\_cr,e & per IS 800 Cl. 8.4.2.2 & \placeholder{tau\_cr} MPa & --- \\[6pt]
-\hline"""
+            r"\multirow{2}{*}{\makecell{" + lbl + r"}} & Min. Moment of Inertia, $I_{ys}$ & "
+            + is_iys_min + r" mm$^4$ & " + is_iys_prov + r" mm$^4$ & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Buckling Resistance, $F_{qd}$ & " + is_fq + r" kN & " + is_fqd + r" kN & --- \\[6pt]" + "\n"
+            + r"\hline"
         )
     t58_content = "\n".join(t58_rows)
 
-    # Generate Table 5.9 rows
+    # Generate Table 5.9 rows — End Panel / Bearing Stiffener Checks
+    bs_r   = _ov(od, KEY_REPORT_BS_R_KN, precision=2, fallback='R')
+    bs_fcd = _ov(od, KEY_REPORT_BS_FCD_KN, precision=2, fallback='Fcd')
     t59_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t59_rows.append(
-            r"\multirow{3}{*}{\makecell{" + lbl + r"""}} & Vertical Anchor Force, $V_p$ & $d \times t_w \times f_y / \sqrt{3}$ & \placeholder{$V_p$} kN & --- \\[6pt]
-\cline{2-5}
- & Tension Flange Reaction, $R_{tf}$ & $V_p / 2$ & \placeholder{$R_{tf}$} kN & --- \\[6pt]
-\cline{2-5}
- & Tension Flange Moment, $M_{tf}$ & $V_p \times d / 10$ & \placeholder{$M_{tf}$} kN-m & --- \\[6pt]
-\hline"""
+            r"\multirow{2}{*}{\makecell{" + lbl + r"}} & Bearing Reaction, $R$ & " + bs_r
+            + r" kN & --- & --- \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Bearing Stiffener Capacity, $F_{cd}$ & " + bs_r + r" kN & " + bs_fcd
+            + r" kN & --- \\[6pt]" + "\n"
+            + r"\hline"
         )
     t59_content = "\n".join(t59_rows)
 
-    # Generate Table 5.10 rows
+    # Generate Table 5.10 rows — Deflection (Allowable / Actual)
+    df_lim_l = _ov(od, KEY_REPORT_DEFL_LIM_LIVE_MM, precision=2, fallback='allow\\_LL')
+    df_act_l = _ov(od, KEY_REPORT_DEFL_LIVE_MM, precision=2, fallback='d\\_LL')
+    df_st_l  = _ov(od, KEY_REPORT_DEFL_LIVE_STATUS, fallback='PASS / FAIL')
+    df_lim_t = _ov(od, KEY_REPORT_DEFL_LIM_TOTAL_MM, precision=2, fallback='allow\\_tot')
+    df_act_t = _ov(od, KEY_REPORT_DEFL_TOTAL_MM, precision=2, fallback='d\\_tot')
+    df_st_t  = _ov(od, KEY_REPORT_DEFL_TOTAL_STATUS, fallback='PASS / FAIL')
     t510_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t510_rows.append(
-            r"\multirow{2}{*}{\makecell{" + lbl + r"""}} & Live Load Deflection (\placeholder{Limit}) & \placeholder{$\delta$\_allow\_LL} mm & \placeholder{$\delta$\_LL} mm & PASS / FAIL \\[6pt]
-\cline{2-5}
- & Total Load Deflection (\placeholder{Limit}) & \placeholder{$\delta$\_allow\_tot} mm & \placeholder{$\delta$\_tot} mm & PASS / FAIL \\[6pt]
-\hline"""
+            r"\multirow{2}{*}{\makecell{" + lbl + r"}} & Live Load Deflection (L/800) & "
+            + df_lim_l + r" mm & " + df_act_l + r" mm & " + df_st_l + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Total Load Deflection (L/600) & " + df_lim_t + r" mm & " + df_act_t
+            + r" mm & " + df_st_t + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     t510_content = "\n".join(t510_rows)
 
-    # Generate Table 5.11 rows
+    # Generate Table 5.11 rows — Maximum Stress Limitation
+    sc_lim = _ov(od, KEY_REPORT_SIGMA_C_LIMIT, precision=2, fallback='allow\\_c')
+    sc_act = _ov(od, KEY_REPORT_SIGMA_C_ACTUAL, precision=2, fallback='actual\\_c')
+    sc_st  = _ov(od, KEY_REPORT_STRESS_C_STATUS, fallback='PASS / FAIL')
+    ss_lim = _ov(od, KEY_REPORT_SIGMA_S_LIMIT, precision=2, fallback='allow\\_s')
+    ss_act = _ov(od, KEY_REPORT_SIGMA_S_ACTUAL, precision=2, fallback='actual\\_s')
+    ss_st  = _ov(od, KEY_REPORT_STRESS_S_STATUS, fallback='PASS / FAIL')
     t511_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t511_rows.append(
-            r"\multirow{2}{*}{\makecell{" + lbl + r"""}} & Concrete (0.48 fck) & \placeholder{allow\_c} MPa & \placeholder{actual\_c} MPa & PASS / FAIL \\[6pt]
-\cline{2-5}
- & Steel (0.66 fy) & \placeholder{allow\_s} MPa & \placeholder{actual\_s} MPa & PASS / FAIL \\[6pt]
-\hline"""
+            r"\multirow{2}{*}{\makecell{" + lbl + r"}} & Concrete ($0.48\,f_{ck}$) & "
+            + sc_lim + r" MPa & " + sc_act + r" MPa & " + sc_st + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Steel equivalent ($0.9\,f_y$) & " + ss_lim + r" MPa & " + ss_act
+            + r" MPa & " + ss_st + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     t511_content = "\n".join(t511_rows)
 
-    # Generate Table 5.12 rows
+    # Generate Table 5.12 rows — Fatigue (Allowable ffd / Actual range)
+    ft_ffd  = _ov(od, KEY_REPORT_F_FD_EFF, precision=2, fallback='ffd')
+    ft_sr   = _ov(od, KEY_REPORT_STRESS_RANGE, precision=2, fallback='f\\_actual')
+    ft_tfd  = _ov(od, KEY_REPORT_TAU_FD_EFF, precision=2, fallback='tau\\_fd')
+    ft_taur = _ov(od, KEY_REPORT_SHEAR_RANGE, precision=2, fallback='tau\\_actual')
     t512_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         t512_rows.append(
-            r"\multirow{3}{*}{\makecell{" + lbl + r"""}} & Welded Girder Web & \placeholder{Reference} & \placeholder{ffd} MPa & \placeholder{f\_actual} MPa --- PASS \\[6pt]
-\cline{2-5}
- & Welded Girder Flange & \placeholder{Reference} & \placeholder{ffd} MPa & \placeholder{f\_actual} MPa --- PASS \\[6pt]
-\cline{2-5}
- & Shear Connectors & \placeholder{tau\_fn} & \placeholder{tau\_fd} MPa & \placeholder{tau\_actual} MPa --- PASS \\[6pt]
-\hline"""
+            r"\multirow{2}{*}{\makecell{" + lbl + r"}} & Normal Stress Range & IRC 22 Cl. 605 & "
+            + ft_ffd + r" MPa & " + ft_sr + r" MPa \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Shear Stress Range & IRC 22 Cl. 605 & " + ft_tfd + r" MPa & " + ft_taur
+            + r" MPa \\[6pt]" + "\n"
+            + r"\hline"
         )
     t512_content = "\n".join(t512_rows)
 
@@ -1603,14 +1717,78 @@ def ch5_design_checks(checks_data, bridge: "ReportDataBridge"):
         + r'\hline' + '\n'
     )
 
-    # Generate Table 5.13 rows
+    # Generate Table 5.13 rows — Girder Design Summary (controlling-girder URs)
+    sm_gov  = _ov(od, KEY_REPORT_GOVERNING_CHECK, fallback='Check')
+    sm_ur_m = _ov(od, KEY_UTIL_FLEXURE, 0.01, 3, fallback='UR')
+    sm_ur_v = _ov(od, KEY_UTIL_SHEAR, 0.01, 3, fallback='UR')
+    sm_ur_l = _ov(od, KEY_UTIL_LTB, 0.01, 3, fallback='UR')
+    sm_ur_d = _ov(od, KEY_UTIL_DEFLECTION_CRACK, 0.01, 3, fallback='UR')
+    sm_st   = _ov(od, KEY_REPORT_OVERALL_STATUS, fallback='PASS / FAIL')
     g_summary_rows = []
     for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
         g_summary_rows.append(
-            lbl + r""" & \placeholder{Check} & \placeholder{UR} & \placeholder{UR} & \placeholder{UR} & \placeholder{UR} & PASS / FAIL \\[6pt]
-\hline"""
+            lbl + r" & " + sm_gov + r" & " + sm_ur_m + r" & " + sm_ur_v
+            + r" & " + sm_ur_l + r" & " + sm_ur_d + r" & " + sm_st + r" \\[6pt]" + "\n"
+            + r"\hline"
         )
     g_summary_table_content = "\n".join(g_summary_rows)
+
+    # Generate Table 5.14 rows — Shear Connector Capacity (bridge-level)
+    sd_qu = _ov(od, KEY_REPORT_QU_KN, precision=2, fallback='Qu')
+    sd_qr = _ov(od, KEY_REPORT_QR_KN, precision=2, fallback='Qr')
+    t514_content = (
+        r"Design Resistance, $Q_u$ & $\min(0.8d^2\sqrt{f_{ck}E_c},\;0.8\pi d^2 f_u)$ & "
+        + sd_qu + r" kN & IRC 22 Cl. 606.3.1 \\[6pt]" + "\n"
+        + r"\hline" + "\n"
+        + r"Fatigue Shear Resistance, $Q_r$ & $\tau_{fn} \times (5\times10^6/N_{SC})^{1/5}$ & "
+        + sd_qr + r" kN & IRC 22 Cl. 606.3.2 \\[6pt]" + "\n"
+        + r"\hline"
+    )
+
+    # Generate Table 5.15 rows — Shear Connector Spacing (per girder)
+    sp_uls  = _ov(od, KEY_REPORT_STUD_SP_ULS, precision=0, fallback='SL1')
+    sp_full = _ov(od, KEY_REPORT_STUD_SP_FULL, precision=0, fallback='SL2')
+    sp_fat  = _ov(od, KEY_REPORT_STUD_SP_FATIGUE, precision=0, fallback='SR')
+    sp_max  = _ov(od, KEY_REPORT_STUD_SP_MAX, precision=0, fallback='limit')
+    sp_prov = _ov(od, KEY_REPORT_STUD_SP_PROV, precision=0, fallback='S\\_prov')
+    sp_st   = _ov(od, KEY_REPORT_STUD_DETAIL_OK, fallback='PASS / FAIL')
+    t515_rows = []
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
+        t515_rows.append(
+            r"\multirow{4}{*}{\makecell{" + lbl + r"}} & ULS Shear (SL1) & " + sp_uls
+            + r" mm & " + sp_prov + r" mm & " + sp_st + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Full Composite (SL2) & " + sp_full + r" mm & " + sp_prov + r" mm & " + sp_st + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & SLS Fatigue (SR) & " + sp_fat + r" mm & " + sp_prov + r" mm & " + sp_st + r" \\[6pt]" + "\n"
+            + r"\cline{2-5}" + "\n"
+            + r" & Max Spacing Limit (IRC 22) & " + sp_max + r" mm & " + sp_prov + r" mm & " + sp_st + r" \\[6pt]" + "\n"
+            + r"\hline"
+        )
+    t515_content = "\n".join(t515_rows)
+
+    # Generate Table 5.16 rows — Transverse Shear and Detailing (per girder)
+    tr_vl   = _ov(od, KEY_REPORT_VL_N_PER_MM, precision=2, fallback='V\\_L')
+    tr_ok   = _ov(od, KEY_REPORT_TRANS_SHEAR_OK, fallback='PASS / FAIL')
+    tr_ast  = _ov(od, KEY_REPORT_AST_REQUIRED, precision=2, fallback='Ast\\_min')
+    tr_dia  = _ov(od, KEY_REPORT_STUD_DIA_MM, precision=1, fallback='d\\_stud')
+    tr_2tf  = _ov(od, KEY_REPORT_TF_TOP_MM, 2.0, 1, fallback='2t\\_f')
+    t516_rows = []
+    for lbl, _ in _girder_labels(n_girders, bridge.input_dict):
+        t516_rows.append(
+            r"\multirow{5}{*}{\makecell{" + lbl + r"}} & \textbf{Longitudinal Shear per unit length, $V_L$} & "
+            + tr_vl + r" N/mm \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Transverse Shear Check (slab)} & " + tr_ok + r" \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Min. Transverse Reinforcement, $A_{st,min}$} & " + tr_ast + r" cm²/m \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Stud Diameter $\leq 2\,t_f$} & " + tr_dia + r" mm vs " + tr_2tf + r" mm \\[6pt]" + "\n"
+            + r"\cline{2-3}" + "\n"
+            + r" & \textbf{Detailing (IRC 22 Cl. 606.6)} & " + sp_st + r" \\[6pt]" + "\n"
+            + r"\hline"
+        )
+    t516_content = "\n".join(t516_rows)
 
     # Generate Table 5.20(a) rows
     cb_forces_rows = []
@@ -1824,10 +2002,7 @@ This section presents all structural design checks performed by OsdagBridge. For
 \hline
 \textbf{Parameter} & \textbf{Formula} & \textbf{Value} & \textbf{Reference} \\[6pt]
 \hline
-Design Resistance, $Q_u$ & $\min(0.8d^2\sqrt{f_{ck}E_c},\;0.8\pi d^2 f_u)$ & \placeholder{$Q_u$} kN & IRC 22 Cl. 606.3.1 \\[6pt]
-\hline
-Fatigue Shear Resistance, Qr & tau\_fn $\times$ (5e6/NSC)\textasciicircum(1/5) & \placeholder{Qr} kN & IRC 22 Cl. 606.3.2 \\[6pt]
-\hline
+""" + t514_content + r"""
 \end{longtable}
 
 \vspace{1em}
@@ -1837,14 +2012,7 @@ Fatigue Shear Resistance, Qr & tau\_fn $\times$ (5e6/NSC)\textasciicircum(1/5) &
 \hline
 \textbf{} & \textbf{Criterion} & \textbf{Governing Spacing} & \textbf{Actual Spacing Provided} & \textbf{Status} \\[6pt]
 \hline
-\multirow{4}{*}{\makecell{\placeholder{Girder Range}}} & ULS Shear (SL1) & \placeholder{SL1} mm & \placeholder{S\_prov} mm & PASS \\[6pt]
-\cline{2-5}
- & Full Composite (SL2) & \placeholder{SL2} mm & \placeholder{S\_prov} mm & PASS \\[6pt]
-\cline{2-5}
- & SLS Fatigue (SR) & \placeholder{SR} mm & \placeholder{S\_prov} mm & PASS \\[6pt]
-\cline{2-5}
- & Max Spacing Limit (IRC 22) & $\placeholder{Formula}$ & \placeholder{limit} mm & PASS \\[6pt]
-\hline
+""" + t515_content + r"""
 \end{longtable}
 \noindent\textit{Note: IRC 22 Cl. 606.4, 606.9. Governing spacing $= \min(S_{L1}, S_{L2}, S_R)$.}
 
@@ -1853,18 +2021,7 @@ Fatigue Shear Resistance, Qr & tau\_fn $\times$ (5e6/NSC)\textasciicircum(1/5) &
 
 \begin{longtable}{|C{3.5cm}|L{5cm}|>{\arraybackslash}p{7.0cm}|}
 \hline
-\multirow{6}{*}{\makecell{\placeholder{Girder Range}}} & \textbf{Longitudinal Shear per unit length, $V_L$} & \placeholder{$V_L$} N/mm \\[6pt]
-\cline{2-3}
- & \textbf{Transverse Shear Capacity of Slab} & $\placeholder{Formula}$ \\[6pt]
-\cline{2-3}
- & \textbf{Transverse Shear Check} & PASS / FAIL \\[6pt]
-\cline{2-3}
- & \textbf{Min. Transverse Reinforcement, $A_{st,min}$} & \placeholder{$A_{st,min}$} cm²/m \\[6pt]
-\cline{2-3}
- & \textbf{Stud Diameter $\leq 2\,t_f$} & \placeholder{$d_{stud}$} mm vs \placeholder{$2t_f$} mm \\[6pt]
-\cline{2-3}
- & \textbf{Edge Distance (min 25 mm)} & \placeholder{$e_{dist}$} mm \\[6pt]
-\hline
+""" + t516_content + r"""
 \end{longtable}
 \noindent\textit{Note: IRC 22 Cl. 606.6, 606.10.}
 
