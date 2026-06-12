@@ -399,57 +399,6 @@ class AdditionalInputs(QDialog):
                 w.setEnabled(not is_optimized)
 
 
-    # Greys out intermediate sub-fields when Intermediate Stiffener = No.
-    def _on_intermediate_stiffener_changed(self, value: str) -> None:
-        is_yes = str(value).strip() == "Yes"
-        for key in [
-            KEY_MP_STIFFENER_INTERMEDIATE_SPACING,
-            KEY_MP_STIFFENER_INTERMEDIATE_THICKNESS,
-            KEY_MP_STIFFENER_INTERMEDIATE_OUTSTAND,
-        ]:
-            w   = self.findChild(QWidget, key)
-            lbl = self.findChild(QLabel,  key + "_label")
-            if w:   w.setEnabled(is_yes)
-            if lbl: lbl.setEnabled(is_yes)
-        
-        # Update stiffener
-        self._update_stiffener_cad()
-    
-    def _update_apply_button_visibility(self, origin_key: str, target_widget: QWidget) -> None:
-        """Show/hide Apply Exterior or Apply Interior button based on selected girder index."""
-        
-        count = int(float(str(self.working_input_dict.get(KEY_TS_NO_OF_GIRDERS) or 1)))
-
-        combo = self.findChild(QComboBox, KEY_MP_GD_SELECT_GIRDER)
-        if combo is None:
-            return
-        idx = combo.currentIndex()
-        is_exterior = (count <= 1) or (idx == 0 or idx == count - 1)
-
-        widget_id = target_widget.objectName()
-        if widget_id == KEY_MP_GD_APPLY_EXTERIOR:
-            target_widget.setVisible(is_exterior)
-        elif widget_id == KEY_MP_GD_APPLY_INTERIOR:
-            target_widget.setVisible(not is_exterior)
-
-    # === Refresh Girder List in Member Properties ===========================================
-    # Connector: fires when origin field (e.g. KEY_TS_NO_OF_GIRDERS) editing finishes.
-    # Reads count from working_input_dict[origin_key], repopulates current_object combo.
-    def _on_girder_count_refreshed(self, origin_key: str, current_object: QComboBox) -> None:
-        
-        value = self.working_input_dict.get(origin_key)
-        if value is None:
-            return
-        
-        count = int(float(str(value)))
-        current = current_object.currentText()
-        current_object.clear()
-        for i in range(1, count + 1):
-            current_object.addItem(f"Girder {i}", f"G{i}")
-        idx = current_object.findText(current)
-        current_object.setCurrentIndex(idx if idx >= 0 else 0)
-        print(f"@@: Update Girder List")
-
     def _update_stiffener_cad(self) -> None:
         from osdagbridge.desktop.ui.dialogs.additional_input.drawings.stiffener_details_cad import StiffenerDetailsCad
         widget = self.findChild(StiffenerDetailsCad, "stiffener_cad_preview")
@@ -623,54 +572,6 @@ class AdditionalInputs(QDialog):
                 self.saved_values[widget_name] = widget.isChecked()
             elif isinstance(widget, LoadCombinationWidget):
                 self.saved_values[widget_name] = widget._data
-
-    def get_saved_data(self) -> dict:  # public API: returns the last saved properties snapshot
-        """Get the last saved properties data."""
-        return self._last_saved_data.copy()
-
-    def set_properties_data(self, data: dict) -> None:  # public API: restores all tab widgets from a previously saved data dict
-        """
-        @author: Faizan
-        Restore previously saved UI and CAD properties across all tabs.
-        """
-        tabs = [
-            getattr(self, "typical_section_tab", None),
-            getattr(self, "section_properties_tab", None),
-            getattr(self, "loading_tab", None),
-            getattr(self, "support_tab", None),
-            getattr(self, "design_options_tab", None),
-            getattr(self, "design_options_cont_tab", None),
-        ]
-
-        for tab in tabs:
-            if not tab:
-                continue
-            if hasattr(tab, "restore_values"):
-                try:
-                    tab.restore_values(data)
-                except Exception:
-                    pass
-            if hasattr(tab, "restore_properties"):
-                try:
-                    tab.restore_properties(data)
-                except Exception:
-                    pass
-
-        # Generic restore fallback
-        try:
-            for widget in self.findChildren(QWidget):
-                name = widget.objectName()
-                if not name or name not in data:
-                    continue
-                value = data[name]
-                if isinstance(widget, QLineEdit):
-                    widget.setText(str(value))
-                elif isinstance(widget, QComboBox):
-                    widget.setCurrentText(str(value))
-                elif isinstance(widget, QCheckBox):
-                    widget.setChecked(bool(value))
-        except Exception:
-            pass
 
     # ── Field Change Handling ────────────────────────────────────────────────────
 
@@ -1299,31 +1200,6 @@ class AdditionalInputs(QDialog):
             elif isinstance(w, QLineEdit):
                 w.setText(str(stored))
 
-    # Connector on_editing_finished for No of Girders (Typical Section Tab) → refresh Select Girder combo (Member Properties Tab)
-    def on_no_of_girders_changed(self):
-
-        # Update Dynamic Keys in Working Dict for Member Properties Tab
-        from osdagbridge.core.bridge_types.plate_girder.defaults import _on_no_of_girders_changed
-        from pprint import pprint
-        print(f"\n\n@@: Dict before updating dynamic keys:\n")
-        # pprint(self.working_input_dict)
-        # print("\n\n")
-        _on_no_of_girders_changed(self.working_input_dict)
-        print(f"\n\n@@: Dict after updating dynamic keys:\n")
-        # pprint(self.working_input_dict)
-        # print("\n\n")
-
-    # Update CAD Method for Support Conditions Tab Drawing
-    # This function is implicitly connected using Schema of the Tab
-    def _update_support_detail_cad(self):
-        from osdagbridge.desktop.ui.dialogs.additional_input.drawings.support_detail_cad import SupportDetailCADWidget
-        widget = self.findChild(SupportDetailCADWidget, KEY_SC_RIGHT_CAD)
-        if widget is None:
-            return
-        combo = self.findChild(QComboBox, KEY_MP_STIFFENER_SELECT_MEMBER_ID)
-        active_member_id = combo.currentText().strip() if combo else ""
-        widget.update_stiffener(self.working_input_dict, active_member_id)
-
     # ── Loading Tab ───────────────────────────────────────────────────────────────
 
     def _on_add_custom_vehicle(self, existing=None, widget=None):  # on_change: opens Custom Vehicle dialog and appends or updates the vehicle list
@@ -1495,48 +1371,6 @@ class AdditionalInputs(QDialog):
         _on_no_of_girders_changed(self.working_input_dict)
 
     # ── Public API ────────────────────────────────────────────────────────────────
-        
-    def _enforce_decimal_places(self, places=2):
-        """Force all QDoubleValidator instances in this dialog to the given decimal places."""
-        for line_edit in self.findChildren(QLineEdit):
-            validator = line_edit.validator()
-            if isinstance(validator, QDoubleValidator):
-                # Only enforce standard notation decimals if it's not explicitly scientific
-                if validator.notation() != QDoubleValidator.ScientificNotation:
-                    validator.setDecimals(places)
-                    validator.setNotation(QDoubleValidator.StandardNotation)
-
-    def _normalize_numeric_texts(self, places=2):
-        """Format any numeric QLineEdit text to the specified decimal places."""
-        fmt = f"{{:.{places}f}}"
-        for line_edit in self.findChildren(QLineEdit):
-            # Skip fields with scientific validators
-            validator = line_edit.validator()
-            if isinstance(validator, QDoubleValidator) and validator.notation() == QDoubleValidator.ScientificNotation:
-                continue
-                
-            text = line_edit.text().strip()
-            if not text:
-                continue
-            try:
-                val = float(text)
-                line_edit.setText(fmt.format(val))
-            except ValueError:
-                continue
-
-    def _sync_member_properties_girder_count(self) -> None:
-        """Push current girder count from Typical Section to Member Properties."""
-        try:
-            count_text = ""
-            if hasattr(self, "typical_section_tab") and hasattr(self.typical_section_tab, "no_of_girders"):
-                count_text = str(self.typical_section_tab.no_of_girders.text() or "").strip()
-            if not count_text:
-                return
-            count = int(float(count_text))
-            if hasattr(self, "section_properties_tab") and hasattr(self.section_properties_tab, "set_girder_count"):
-                self.section_properties_tab.set_girder_count(count)
-        except Exception:
-            pass
 
     def get_all_values(self):  # public API: collects all CAD-relevant numeric parameters from the Typical Section Details tab
         """
@@ -1728,16 +1562,17 @@ class AdditionalInputs(QDialog):
             except ValueError:
                 continue
 
-    def _sync_member_properties_girder_count(self) -> None:  # utility: pushes current girder count from Typical Section to Member Properties tab
+    def _sync_member_properties_girder_count(self) -> None:  # utility: pushes current girder count from working_input_dict to Member Properties tab
         try:
-            count_text = ""
-            if hasattr(self, "typical_section_tab") and hasattr(self.typical_section_tab, "no_of_girders"):
-                count_text = str(self.typical_section_tab.no_of_girders.text() or "").strip()
-            if not count_text:
+            val = self.working_input_dict.get(KEY_TS_NO_OF_GIRDERS) if hasattr(self, "working_input_dict") else None
+            if val is None:
                 return
-            count = int(float(count_text))
+            count = int(float(str(val)))
             if hasattr(self, "section_properties_tab") and hasattr(self.section_properties_tab, "set_girder_count"):
                 self.section_properties_tab.set_girder_count(count)
+            sg = self._w(QComboBox, KEY_MP_CB_SELECT_GIRDERS)
+            if sg is not None:
+                self._on_cb_girder_pairs_refreshed(KEY_TS_NO_OF_GIRDERS, sg)
         except Exception:
             pass
 
@@ -1813,6 +1648,7 @@ class AdditionalInputs(QDialog):
         return -1
 
 
+    # ==================== START: Cross-Bracing Tab ====================
 
     def init_cb_state(self):
         if not hasattr(self, "_state_by_member_key"):
@@ -1825,6 +1661,10 @@ class AdditionalInputs(QDialog):
             self._selection_sync_guard = False
         if not hasattr(self, "_girder_details_tab"):
             self._girder_details_tab = None
+        if not hasattr(self, "member_id_combo"):
+            # Off-screen data-holder combo: _refresh_member_id_display mirrors the
+            # single CB member id here. Not added to any layout.
+            self.member_id_combo = QComboBox()
         if not hasattr(self, "catalog"):
             from osdagbridge.desktop.ui.widgets.section_viewer import SectionCatalog
             self.catalog = SectionCatalog()
@@ -2254,6 +2094,24 @@ class AdditionalInputs(QDialog):
 
     cb_refresh_girder_options = refresh_girder_options
 
+    def _on_cb_girder_pairs_refreshed(self, origin_key: str, target_widget) -> None:  # END_CONNECTOR: repopulates Select Girder Pair combo when girder count changes
+        if not isinstance(target_widget, QComboBox):
+            return
+        value = self.working_input_dict.get(origin_key)
+        if value is None:
+            return
+        count = int(float(str(value)))
+        prev = target_widget.currentText()
+        block = target_widget.blockSignals(True)
+        try:
+            target_widget.clear()
+            for i in range(1, count):
+                target_widget.addItem(f"G{i} to G{i + 1}")
+            idx = target_widget.findText(prev)
+            target_widget.setCurrentIndex(idx if idx >= 0 else 0)
+        finally:
+            target_widget.blockSignals(block)
+
     # ── Section designation helpers ────────────────────────────────────────────
 
     def _display_name_for(self, designation: str, section_type: str) -> str:
@@ -2447,6 +2305,8 @@ class AdditionalInputs(QDialog):
             self._updating_chord_rules = False
 
         self._update_previews()
+
+    # ==================== END: Cross-Bracing Tab ====================
 
     # ── External API ──────────────────────────────────────────────────────────
 

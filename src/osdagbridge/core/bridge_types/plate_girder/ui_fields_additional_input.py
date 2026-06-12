@@ -1834,6 +1834,9 @@ END_CONNECTORS = [
     
     # Update Select Girder Combobox (Target) on change no of girder (Origin)
     (KEY_TS_NO_OF_GIRDERS,     KEY_MP_GD_SELECT_GIRDER,    "_on_girder_count_refreshed"),
+
+    # Update Select Girder Pair Combobox (Cross-Bracing) on change no of girders
+    (KEY_TS_NO_OF_GIRDERS,     KEY_MP_CB_SELECT_GIRDERS,   "_on_cb_girder_pairs_refreshed"),
     
     # Update Apply buttons visibility
     (KEY_MP_GD_SELECT_GIRDER,  KEY_MP_GD_APPLY_EXTERIOR,   "_update_apply_button_visibility"),
