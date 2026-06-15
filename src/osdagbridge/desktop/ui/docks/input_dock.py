@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QComboBox, QScrollArea, QLabel, QLineEdit, QGroupBox, QSizePolicy,
     QDialog, QFrame, QToolButton,
 )
+from osdagbridge.desktop.ui.utils.custom_widgets import WideDropdownComboBox
 from PySide6.QtCore import Qt, QRegularExpression, QSize, QTimer, QPoint, QEvent, Signal
 from PySide6.QtGui import QDoubleValidator, QRegularExpressionValidator, QIcon, QColor, QBrush
 
@@ -51,9 +52,8 @@ ACTION_BTN_STYLE = (
 LABEL_STYLE = "QLabel { color:#000; font-size:12px; background:transparent; }"
 
 
-class NoScrollComboBox(QComboBox):
-    def wheelEvent(self, event):
-        event.ignore()
+class NoScrollComboBox(WideDropdownComboBox):
+    pass
 
 
 class InputDock(QWidget):

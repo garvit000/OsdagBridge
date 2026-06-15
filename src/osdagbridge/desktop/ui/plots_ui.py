@@ -16,9 +16,10 @@ os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = (
 
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QComboBox, QCheckBox, QTableWidget, QTableWidgetItem, 
-    QHeaderView, QPushButton, QDialog
+    QLabel, QTableWidget, QTableWidgetItem,
+    QHeaderView, QDialog
 )
+from osdagbridge.desktop.ui.utils.custom_widgets import WideDropdownComboBox
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWebEngineCore import QWebEngineSettings
 from PySide6.QtCore import QUrl, Qt, QPoint, QObject, Slot, Signal
@@ -162,13 +163,13 @@ class PlotWidget(QWidget):
 
         # ---------- LOADCASE ----------
         top.addWidget(QLabel("Load case:"))
-        self.combo = QComboBox()
+        self.combo = WideDropdownComboBox()
         self.combo.currentTextChanged.connect(self.update_plot)
         top.addWidget(self.combo)
 
         # ---------- FORCE ----------
         top.addWidget(QLabel("Force:"))
-        self.force_combo = QComboBox()
+        self.force_combo = WideDropdownComboBox()
         self.force_combo.addItems(list(FORCE_MAP.keys()))
         self.force_combo.setCurrentText("Vy")
         self.force_combo.currentTextChanged.connect(self.update_plot)

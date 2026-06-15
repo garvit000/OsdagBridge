@@ -92,6 +92,25 @@ class SmartCursorComboBoxView(QListView):
         self.setCursor(Qt.ArrowCursor)
         super().leaveEvent(event)
 
+from PySide6.QtWidgets import QComboBox as _QComboBox
+
+
+class WideDropdownComboBox(_QComboBox):
+    """QComboBox that expands its popup width to fully show the longest item."""
+
+    def wheelEvent(self, event):
+        event.ignore()
+
+    def showPopup(self):
+        fm = self.fontMetrics()
+        max_width = max(
+            (fm.horizontalAdvance(self.itemText(i)) for i in range(self.count())),
+            default=0,
+        ) + 40  # scrollbar + item padding
+        self.view().setMinimumWidth(max(self.width(), max_width))
+        super().showPopup()
+
+
 from PySide6.QtWidgets import QCheckBox, QLabel, QHBoxLayout
 from PySide6.QtWidgets import QCheckBox, QStyleOptionButton, QStyle, QApplication
 from PySide6.QtGui import QPainter, QTextDocument

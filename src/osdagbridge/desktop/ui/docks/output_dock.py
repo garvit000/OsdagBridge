@@ -43,7 +43,7 @@ from osdagbridge.core.utils.common import (
 )
 from osdagbridge.desktop.ui.utils.custom_buttons import DockCustomButton
 from osdagbridge.desktop.ui.docks.dock_utils import apply_field_style
-from osdagbridge.desktop.ui.utils.custom_widgets import RichCheckBox, PercentBarWidget, CustomRadioButton
+from osdagbridge.desktop.ui.utils.custom_widgets import RichCheckBox, PercentBarWidget, CustomRadioButton, WideDropdownComboBox
 from osdagbridge.desktop.ui.dialogs.generate_results_dialog import GenerateResultsDialog
 from osdagbridge.desktop.ui.dialogs.custom_messagebox import CustomMessageBox, MessageBoxType
 # ── Styles ────────────────────────────────────────────────────────────────────
@@ -70,9 +70,8 @@ LABEL_STYLE       = "QLabel { color:#000; font-size:12px; background:transparent
 SMALL_LABEL_STYLE = "QLabel { color:#333; font-size:10px; font-weight:normal; background:transparent; }"
 
 
-class NoScrollComboBox(QComboBox):
-    def wheelEvent(self, event):
-        event.ignore()
+class NoScrollComboBox(WideDropdownComboBox):
+    pass
 
 
 # ── OutputDock ────────────────────────────────────────────────────────────────

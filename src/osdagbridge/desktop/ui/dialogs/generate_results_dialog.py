@@ -17,6 +17,7 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from osdagbridge.core.bridge_types.plate_girder.ui_fields_additional_input import GENERATE_RESULTS_DEFAULTS
 from osdagbridge.desktop.ui.utils.custom_titlebar import CustomTitleBar
 from osdagbridge.desktop.ui.dialogs.custom_messagebox import CustomMessageBox, MessageBoxType
+from osdagbridge.desktop.ui.utils.custom_widgets import WideDropdownComboBox
 from osdagbridge.desktop.ui.dialogs.generate_results_values_builder import resolve_table
 
 
@@ -54,9 +55,8 @@ class CheckboxDelegate(QStyledItemDelegate):
         painter.setFont(QFont("Arial", 10))
         painter.drawText(checkbox_rect, Qt.AlignCenter, symbol)
 
-class NoScrollComboBox(QComboBox):
-    def wheelEvent(self, event):
-        event.ignore()
+class NoScrollComboBox(WideDropdownComboBox):
+    pass
 
 
 def apply_field_style(widget):

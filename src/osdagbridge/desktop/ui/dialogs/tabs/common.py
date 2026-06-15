@@ -10,9 +10,10 @@ from PySide6.QtWidgets import (
     QPushButton,
     QHBoxLayout,
 )
+from osdagbridge.desktop.ui.utils.custom_widgets import WideDropdownComboBox
 
 
-class CheckableComboBox(QComboBox):
+class CheckableComboBox(WideDropdownComboBox):
     """Multi-select combo with All/individual toggle behavior."""
 
     checkedItemsChanged = Signal()

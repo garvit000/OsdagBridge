@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from osdagbridge.desktop.ui.utils.custom_titlebar import CustomTitleBar
-from osdagbridge.desktop.ui.utils.custom_widgets import CustomRadioButton
+from osdagbridge.desktop.ui.utils.custom_widgets import CustomRadioButton, WideDropdownComboBox
 from osdagbridge.desktop.ui.dialogs.custom_messagebox import CustomMessageBox, MessageBoxType
 from osdagbridge.core.bridge_types.plate_girder.ui_fields_project_location import (
     get_state_list,
@@ -23,9 +23,8 @@ LAST_WEATHER_DATA = None  # Looked-up or persisted weather data (wind, seismic, 
 LAST_LOCATION_METHOD = None  # "location_name" or "map"
 LAST_LOCATION_DATA = None  # {"state": ..., "district": ...} or {"latitude": ..., "longitude": ...}
 
-class NoScrollComboBox(QComboBox):
-    def wheelEvent(self, event):
-        event.ignore()  # Prevent changing selection on scroll
+class NoScrollComboBox(WideDropdownComboBox):
+    pass
 
 def apply_field_style(widget):
     widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)

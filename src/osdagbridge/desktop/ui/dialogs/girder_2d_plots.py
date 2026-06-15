@@ -10,8 +10,9 @@ import matplotlib.gridspec as gridspec
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QFrame, QComboBox,
+    QLabel, QLineEdit, QFrame
 )
+from osdagbridge.desktop.ui.utils.custom_widgets import WideDropdownComboBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
@@ -71,7 +72,7 @@ class Girder2DPlotsWidget(QWidget):
 
         # Combo Box 
         def create_combo_box():
-            combo = QComboBox()
+            combo = WideDropdownComboBox()
             combo.setStyleSheet("""
                 QComboBox {
                     border: 1px solid #CCCCCC;
