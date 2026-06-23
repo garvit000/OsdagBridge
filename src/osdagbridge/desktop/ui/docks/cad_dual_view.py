@@ -286,12 +286,22 @@ class BridgeDualCADWidget(QWidget):
                 elif footpath_value == "Both Sides":
                     params['footpath_config'] = 'both'
         
-        # Map cross bracing spacing (meters to mm)
-        if KEY_MP_CB_SPACING in input_dict:
-            if input_dict[KEY_MP_CB_SPACING] is not None:
-                params['cross_bracing_spacing'] = float(input_dict[KEY_MP_CB_SPACING]) * 1000
+        # Map cross bracing spacing (meters to mm).
+        # When explicitly set (via Additional Inputs), use that value.
+        # Otherwise derive from span using the same formula as the cross bracing tab:
+        #   spacing = span / (no_of_cross_bracings + 1)
+        if input_dict.get(KEY_MP_CB_SPACING) is not None:
+            params['cross_bracing_spacing'] = float(input_dict[KEY_MP_CB_SPACING]) * 1000
+        else:
+            span_m = input_dict.get(KEY_SPAN)
+            no_bracings = int(float(str(input_dict.get(KEY_MP_CB_NO_OF_CROSS_BRACINGS) or 1)))
+            if span_m is not None:
+                try:
+                    params['cross_bracing_spacing'] = float(span_m) / (no_bracings + 1) * 1000
+                except (TypeError, ValueError):
+                    params['cross_bracing_spacing'] = 3.5 * 1000
             else:
-                params['cross_bracing_spacing'] = 3.5 * 1000 # Add default values if not present
+                params['cross_bracing_spacing'] = 3.5 * 1000
 
         # Map median present
         if KEY_INCLUDE_MEDIAN in input_dict:

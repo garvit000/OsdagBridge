@@ -798,8 +798,9 @@ def solve_extend_basic_input_dict(basic_input_dict: dict) -> None:
         footpath_width = float(basic_input_dict.get(KEY_TS_FOOTPATH_WIDTH))
         railing_width  = _railing_width_m(basic_input_dict.get(KEY_RL_WIDTH))
 
-    median_width  = basic_input_dict.get(KEY_MD_WIDTH) or 0.0
-    no_of_girders = int(basic_input_dict.get(KEY_TS_NO_OF_GIRDERS) or 4)
+    import math as _math
+
+    median_width = basic_input_dict.get(KEY_MD_WIDTH) or 0.0
 
     solver = BridgeConfigurationSolver(
         carriageway_width=float(basic_input_dict.get(KEY_CARRIAGEWAY_WIDTH)),
@@ -809,6 +810,20 @@ def solve_extend_basic_input_dict(basic_input_dict: dict) -> None:
         median_width=float(median_width),
         n_footpaths=n_footpaths,
     )
+
+    # Derive the number of girders.
+    # When the user has not yet set a count (None), compute it from the overall
+    # bridge width so that girder spacing lands in the preferred range [2.5, 3.5 m].
+    # Formula: spacing = overall_width / n  →  n = overall_width / target_spacing
+    stored_n = basic_input_dict.get(KEY_TS_NO_OF_GIRDERS)
+    if stored_n is None:
+        overall_width_for_n = solver.calculate_overall_bridge_width()
+        n_min = max(2, _math.ceil(overall_width_for_n / 3.5))
+        n_max = max(n_min, int(overall_width_for_n / 2.5))
+        no_of_girders = max(n_min, min(n_max, round(overall_width_for_n / 3.0)))
+    else:
+        no_of_girders = int(stored_n)
+
     sizing_result = solver._solve_layout(no_of_girders=no_of_girders, changed_field='girders')
 
     print("[DEBUG] Bridge Layout Sizing Result:")

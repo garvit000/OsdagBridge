@@ -630,6 +630,20 @@ class InputDock(QWidget):
         # enabled state — flag so solve_extend_basic_input_dict runs on next open.
         self.is_require_field_changed = True
 
+    def _validate_carriageway_width_silent(self, value=None):
+        """Re-validate carriageway width when median setting changes.
+        If the stored width is now below the new minimum (e.g. median enabled but
+        width < 7.5 m), show an error popup and correct the field.
+        """
+        widget = self._w(KEY_CARRIAGEWAY_WIDTH)
+        if not isinstance(widget, QLineEdit):
+            return
+        current_text = widget.text().strip()
+        if not current_text:
+            return
+        # Re-use the existing hard-validation path to show a popup and correct.
+        self._on_field_edited(KEY_CARRIAGEWAY_WIDTH, widget)
+
     def _on_design_mode_changed(self, mode_text: str = ""):
         self._current_design_mode = str(mode_text or "Optimized").strip()
         if self._current_design_mode.lower() == "custom":
