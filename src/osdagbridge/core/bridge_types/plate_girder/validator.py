@@ -125,8 +125,8 @@ class BridgeInputValidator:
         elif key == KEY_TS_FOOTPATH_THICKNESS:
             v = self._to_float(inputs.get(key))
             if v is None: return 200, "Footpath thickness must be a numeric value."
-            if v < 100:   return 100, "Footpath thickness must be at least 100 mm."
-            if v > 500:   return 500, "Footpath thickness must not exceed 500 mm."
+            if v < 150:   return 150, "Footpath thickness must be at least 150 mm."
+            if v > 300:   return 300, "Footpath thickness must not exceed 300 mm."
 
         # ── Crash Barrier ──────────────────────────────────────────────────────
         elif key == KEY_CB_WIDTH:

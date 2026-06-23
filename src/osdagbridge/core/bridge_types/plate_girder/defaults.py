@@ -180,7 +180,7 @@ def _update_typical_section_defaults(input_dict: dict) -> None:
     # --- Deck Detail sub-tab ---
     _update(KEY_TS_DECK_THICKNESS,     200.0)                        # mm
     _update(KEY_TS_FOOTPATH_WIDTH,     IS_DEFAULT_FOOTPATH_WIDTH_M)  # m
-    _update(KEY_TS_FOOTPATH_THICKNESS, 100.0)                        # mm
+    _update(KEY_TS_FOOTPATH_THICKNESS, 200.0)                        # mm
 
     # --- Crash Barrier sub-tab ---
     _cb_dims = IRC5_2015.cl_109_6_3_shapes(
@@ -811,18 +811,13 @@ def solve_extend_basic_input_dict(basic_input_dict: dict) -> None:
         n_footpaths=n_footpaths,
     )
 
-    # Derive the number of girders.
-    # When the user has not yet set a count (None), compute it from the overall
-    # bridge width so that girder spacing lands in the preferred range [2.5, 3.5 m].
-    # Formula: spacing = overall_width / n  →  n = overall_width / target_spacing
-    stored_n = basic_input_dict.get(KEY_TS_NO_OF_GIRDERS)
-    if stored_n is None:
-        overall_width_for_n = solver.calculate_overall_bridge_width()
-        n_min = max(2, _math.ceil(overall_width_for_n / 3.5))
-        n_max = max(n_min, int(overall_width_for_n / 2.5))
-        no_of_girders = max(n_min, min(n_max, round(overall_width_for_n / 3.0)))
-    else:
-        no_of_girders = int(stored_n)
+    # Always compute no_of_girders from the current overall bridge width so that
+    # girder spacing stays in [2.5, 3.5 m] even when median or footpath changes.
+    # Formula: spacing = overall_width / n  →  n = round(overall_width / 3.0)
+    overall_width_for_n = solver.calculate_overall_bridge_width()
+    n_min = max(2, _math.ceil(overall_width_for_n / 3.5))
+    n_max = max(n_min, int(overall_width_for_n / 2.5))
+    no_of_girders = max(n_min, min(n_max, round(overall_width_for_n / 3.0)))
 
     sizing_result = solver._solve_layout(no_of_girders=no_of_girders, changed_field='girders')
 
