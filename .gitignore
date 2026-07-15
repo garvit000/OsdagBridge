@@ -78,7 +78,6 @@ local_settings.py
 
 # Project-specific temp files
 temp_plot.html
-*.html
 mat_lib.json
 # Ship the packaged default material library so installed apps never need to
 # write it at runtime (avoids the "Material library unable to be read" warning).
@@ -262,5 +261,4 @@ src/osdag_map_cache/
 # Project-specific ignores
 # ospgrillage/
 temp_plot.html
-*.html
 tools/
