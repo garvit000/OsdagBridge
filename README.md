@@ -8,10 +8,10 @@
 OsdagBridge is a modular, shared-core software plugin for the analysis and design of steel bridges within the Osdag ecosystem.  
 It supports desktop (PySide6), web (Django + React), and CLI interfaces through a unified Python core.
 
-📖 **[Documentation website](https://garvit000.github.io/OsdagBridge/)** ·
-📦 **[Latest release](https://github.com/garvit000/OsdagBridge/releases/latest)** ·
-⬇️ **[Download for Windows](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe)** ·
-⬇️ **[Download for Linux](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh)**
+**[Documentation](https://garvit000.github.io/OsdagBridge/)** ·
+**[Latest release](https://github.com/garvit000/OsdagBridge/releases/latest)** ·
+**[Download for Windows](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe)** ·
+**[Download for Linux](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh)**
 
 The system currently supports:
 - Plate Girder Bridges  
