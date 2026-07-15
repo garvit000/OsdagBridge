@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Installation — OsdagBridge</title>
+  <meta name="description" content="How to install OsdagBridge on Windows and Linux, or build it from source." />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><span class="brand-icon">🌉</span> OsdagBridge</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="installation.html">Installation</a>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="faq.html">FAQ</a>
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+        <button id="navToggle" class="icon-btn nav-toggle" aria-label="Toggle menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-header container">
+      <h1>Installation</h1>
+      <p>Pick an installer for your platform, or build OsdagBridge from source.</p>
+    </div>
+
+    <section>
+      <div class="container">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="windows">🪟 Windows</button>
+          <button class="tab-btn" data-tab="linux">🐧 Linux</button>
+        </div>
+        <div>
+          <div class="tab-panel active" data-panel="windows">
+            <ol class="steps">
+              <li>
+                <h3>Download the installer</h3>
+                <p>Grab the latest Windows installer directly from GitHub Releases:</p>
+                <div class="btn-group">
+                  <a class="btn btn-primary" href="https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe">
+                    Download OsdagBridge-Setup.exe
+                  </a>
+                </div>
+              </li>
+              <li>
+                <h3>Run the installer</h3>
+                <p>Double-click <code>OsdagBridge-Setup.exe</code> and follow the on-screen prompts.</p>
+                <div class="callout warning">
+                  <strong>Windows SmartScreen notice</strong>
+                  Since the installer isn't yet code-signed, Windows may show a "Windows protected your PC" prompt.
+                  Click <em>More info</em> → <em>Run anyway</em> to continue.
+                </div>
+              </li>
+              <li>
+                <h3>Launch OsdagBridge</h3>
+                <p>Use the desktop shortcut or the Start Menu entry created by the installer.</p>
+              </li>
+              <li>
+                <h3>Uninstalling</h3>
+                <p>Use <em>Add or Remove Programs</em>, or run the uninstaller shortcut created alongside the app.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="tab-panel" data-panel="linux">
+            <ol class="steps">
+              <li>
+                <h3>Download the installer</h3>
+                <p>Grab the latest Linux shell installer directly from GitHub Releases:</p>
+                <div class="btn-group">
+                  <a class="btn btn-primary" href="https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh">
+                    Download OsdagBridge-Linux.sh
+                  </a>
+                </div>
+              </li>
+              <li>
+                <h3>Make it executable</h3>
+                <pre><code>chmod +x OsdagBridge-Linux.sh</code></pre>
+              </li>
+              <li>
+                <h3>Run the installer</h3>
+                <pre><code>./OsdagBridge-Linux.sh</code></pre>
+                <p>Follow the prompts to choose an install location. By default OsdagBridge installs to <code>$HOME/OsdagBridge</code>.</p>
+              </li>
+              <li>
+                <h3>Launch OsdagBridge</h3>
+                <pre><code>$HOME/OsdagBridge/bin/osdagbridge</code></pre>
+              </li>
+              <li>
+                <h3>Uninstalling</h3>
+                <p>Run the bundled uninstall script from the install directory:</p>
+                <pre><code>$HOME/OsdagBridge/Uninstall-OsdagBridge.sh</code></pre>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="container">
+        <div class="section-title">
+          <h2>Building from source</h2>
+          <p>For contributors, or platforms without a prebuilt installer (e.g. macOS).</p>
+        </div>
+        <ol class="steps">
+          <li>
+            <h3>Clone the repository</h3>
+            <pre><code>git clone https://github.com/garvit000/OsdagBridge.git
+cd OsdagBridge</code></pre>
+          </li>
+          <li>
+            <h3>Install in editable mode</h3>
+            <pre><code>pip install -e .</code></pre>
+          </li>
+          <li>
+            <h3>Run the desktop app</h3>
+            <pre><code>python -m osdagbridge.desktop</code></pre>
+          </li>
+          <li>
+            <h3>Or run the CLI</h3>
+            <pre><code>osdagbridge analyze project.yaml --solver native</code></pre>
+          </li>
+        </ol>
+        <p class="text-center mt-2">
+          Continue to <a href="getting-started.html">Getting Started</a> for a full walkthrough of the desktop, web, and CLI workflows.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>OsdagBridge</strong>
+        <p>Open-source steel bridge analysis and design, part of the Osdag ecosystem.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">Report an Issue</a>
+        <a href="https://github.com/garvit000/OsdagBridge/releases" target="_blank" rel="noopener">All Releases</a>
+        <a href="https://github.com/garvit000/OsdagBridge/blob/dev/LICENSE" target="_blank" rel="noopener">License</a>
+      </div>
+    </div>
+    <p class="footer-note">© 2026 OsdagBridge Contributors · MIT License</p>
+  </footer>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

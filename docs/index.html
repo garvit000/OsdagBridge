@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OsdagBridge — Open-Source Steel Bridge Design</title>
+  <meta name="description" content="OsdagBridge is a modular, open-source plugin for the analysis and design of steel bridges within the Osdag ecosystem." />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><span class="brand-icon">🌉</span> OsdagBridge</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="installation.html">Installation</a>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="faq.html">FAQ</a>
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+        <button id="navToggle" class="icon-btn nav-toggle" aria-label="Toggle menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <span class="eyebrow">Part of the Osdag ecosystem</span>
+        <h1>Steel bridge analysis &amp; design, open source.</h1>
+        <p class="lead">
+          OsdagBridge is a modular, shared-core plugin for analyzing and designing steel bridges,
+          available as a desktop app, web app, and CLI — all backed by the same Python core.
+        </p>
+        <div class="badge-row">
+          <img src="https://img.shields.io/github/v/release/garvit000/OsdagBridge?label=latest%20release" alt="Latest release" />
+          <img src="https://img.shields.io/github/downloads/garvit000/OsdagBridge/total?label=downloads" alt="Downloads" />
+          <img src="https://img.shields.io/github/license/garvit000/OsdagBridge" alt="License" />
+        </div>
+        <div class="btn-group">
+          <a class="btn btn-primary" href="https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe">
+            ⬇ Download for Windows
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh">
+            ⬇ Download for Linux
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="alt">
+      <div class="container">
+        <div class="section-title">
+          <h2>Why OsdagBridge</h2>
+          <p>A single core, reused everywhere — consistent results across every interface.</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="icon">🧩</div>
+            <h3>Shared Core Architecture</h3>
+            <p>All numerical logic and I/O live once in <code>osdagbridge.core</code>, reused identically by the desktop GUI, web app, and CLI.</p>
+          </div>
+          <div class="card">
+            <div class="icon">🏗️</div>
+            <h3>Modular Bridge Types</h3>
+            <p>Plate girder bridges today, with box girder and truss types planned through a pluggable bridge-type architecture.</p>
+          </div>
+          <div class="card">
+            <div class="icon">🔩</div>
+            <h3>Reusable Components</h3>
+            <p>Girders, decks, crash barriers, pedestals, piers, foundations, and pile caps shared across bridge types.</p>
+          </div>
+          <div class="card">
+            <div class="icon">🧮</div>
+            <h3>Multi-Solver Analysis</h3>
+            <p>Switch between a native lightweight FEM solver, OpenSeesPy, and OspGrillage at runtime via adapters.</p>
+          </div>
+          <div class="card">
+            <div class="icon">📐</div>
+            <h3>Indian Standards Built In</h3>
+            <p>IRC:6–2017, IRC:22–2015, and IRC:24–2010 load models, combinations, material factors, and code checks.</p>
+          </div>
+          <div class="card">
+            <div class="icon">💻</div>
+            <h3>Desktop, Web &amp; CLI</h3>
+            <p>Use the PySide6 desktop app, the Django + React web app, or automate everything from the command line.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshots -->
+    <section>
+      <div class="container">
+        <div class="section-title">
+          <h2>See it in action</h2>
+          <p>Screenshots of the desktop, web, and CLI interfaces (coming soon).</p>
+        </div>
+        <div class="grid">
+          <div class="screenshot-placeholder">
+            <div class="icon">🖥️</div>
+            <span class="label">Desktop Application</span>
+            <span>Screenshot placeholder</span>
+          </div>
+          <div class="screenshot-placeholder">
+            <div class="icon">🌐</div>
+            <span class="label">Web Application</span>
+            <span>Screenshot placeholder</span>
+          </div>
+          <div class="screenshot-placeholder">
+            <div class="icon">⌨️</div>
+            <span class="label">Command-Line Interface</span>
+            <span>Screenshot placeholder</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Installation -->
+    <section class="alt">
+      <div class="container">
+        <div class="section-title">
+          <h2>Install OsdagBridge</h2>
+          <p>Grab the installer for your platform, or build from source.</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="icon">🪟</div>
+            <h3>Windows</h3>
+            <p>Download and run the <code>.exe</code> installer — no Python setup required.</p>
+            <div class="mt-2">
+              <a class="btn btn-primary" href="https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe">
+                Download OsdagBridge-Setup.exe
+              </a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="icon">🐧</div>
+            <h3>Linux</h3>
+            <p>Download the shell installer, mark it executable, and run it.</p>
+            <div class="mt-2">
+              <a class="btn btn-primary" href="https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh">
+                Download OsdagBridge-Linux.sh
+              </a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="icon">🐍</div>
+            <h3>From Source</h3>
+            <p>Clone the repository and install in editable mode with <code>pip</code>.</p>
+            <div class="mt-2">
+              <a class="btn btn-secondary" href="installation.html">See build-from-source steps</a>
+            </div>
+          </div>
+        </div>
+        <p class="text-center mt-2">
+          Full walkthrough, prerequisites, and troubleshooting on the
+          <a href="installation.html">Installation page</a>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>OsdagBridge</strong>
+        <p>Open-source steel bridge analysis and design, part of the Osdag ecosystem for structural engineering education, research, and practice.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">Report an Issue</a>
+        <a href="https://github.com/garvit000/OsdagBridge/releases" target="_blank" rel="noopener">All Releases</a>
+        <a href="https://github.com/garvit000/OsdagBridge/blob/dev/LICENSE" target="_blank" rel="noopener">License</a>
+      </div>
+    </div>
+    <p class="footer-note">© 2026 OsdagBridge Contributors · MIT License</p>
+  </footer>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

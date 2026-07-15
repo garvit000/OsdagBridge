@@ -1,0 +1,125 @@
+name: Release Installers
+
+# Trigger on version tags, e.g. v1.0.0, v1.2.3
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+
+      - name: Install constructor
+        shell: bash -l {0}
+        run: |
+          conda install -y constructor
+
+      # ---------------------------------------------------------------------
+      # PLACEHOLDER: adjust to match the real build if this drifts from
+      # constructor/construct.yaml (e.g. a different channel, pinned version,
+      # or a separate packaging step that must run before constructor).
+      # ---------------------------------------------------------------------
+      - name: Build installer with constructor
+        shell: bash -l {0}
+        run: |
+          constructor constructor/ --output-dir dist
+
+      - name: Rename installer to release asset name
+        shell: bash
+        run: |
+          SRC=$(find dist -maxdepth 1 -iname "*.exe" | head -n 1)
+          echo "Built installer: $SRC"
+          cp "$SRC" dist/OsdagBridge-Setup.exe
+
+      - name: Upload Windows installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/OsdagBridge-Setup.exe
+
+  build-linux:
+    name: Build Linux installer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+
+      - name: Install constructor
+        shell: bash -l {0}
+        run: |
+          conda install -y constructor
+
+      # ---------------------------------------------------------------------
+      # PLACEHOLDER: adjust to match the real build if this drifts from
+      # constructor/construct.yaml.
+      # ---------------------------------------------------------------------
+      - name: Build installer with constructor
+        shell: bash -l {0}
+        run: |
+          constructor constructor/ --output-dir dist
+
+      - name: Rename installer to release asset name
+        shell: bash
+        run: |
+          SRC=$(find dist -maxdepth 1 -iname "*.sh" | head -n 1)
+          echo "Built installer: $SRC"
+          cp "$SRC" dist/OsdagBridge-Linux.sh
+
+      - name: Upload Linux installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: dist/OsdagBridge-Linux.sh
+
+  # -----------------------------------------------------------------------
+  # PLACEHOLDER: add a build-macos job here once a macOS installer exists
+  # (e.g. built with constructor's `pkg` output, or `create-dmg`), then list
+  # its artifact under `files:` in the release job below.
+  # -----------------------------------------------------------------------
+
+  release:
+    name: Create GitHub Release
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: dist
+
+      - name: Download Linux installer
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-installer
+          path: dist
+
+      - name: Create release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # Support future assets (e.g. OsdagBridge-macOS.pkg) by adding
+          # them here once a build-macos job produces them.
+          files: |
+            dist/OsdagBridge-Setup.exe
+            dist/OsdagBridge-Linux.sh
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

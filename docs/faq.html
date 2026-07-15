@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FAQ — OsdagBridge</title>
+  <meta name="description" content="Frequently asked questions about OsdagBridge." />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><span class="brand-icon">🌉</span> OsdagBridge</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="installation.html">Installation</a>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="faq.html">FAQ</a>
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+        <button id="navToggle" class="icon-btn nav-toggle" aria-label="Toggle menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-header container">
+      <h1>Frequently Asked Questions</h1>
+      <p>Can't find what you're looking for? Open an issue on GitHub.</p>
+    </div>
+
+    <section>
+      <div class="container">
+        <details class="faq-item" open>
+          <summary>What is OsdagBridge?</summary>
+          <div class="faq-body">
+            <p>OsdagBridge is a modular, shared-core plugin for the analysis and design of steel bridges, built as part of the
+            Osdag ecosystem. It shares a single Python core across a desktop app, a web app, and a CLI.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Which bridge types are supported today?</summary>
+          <div class="faq-body">
+            <p>Plate girder bridges are supported today. Additional bridge types (e.g. box girder, truss) can be added
+            through the plugin architecture as they're developed.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Which operating systems are supported?</summary>
+          <div class="faq-body">
+            <p>Prebuilt installers are available for <strong>Windows</strong> and <strong>Linux</strong>. macOS isn't
+            packaged yet — see <a href="installation.html#">Building from source</a> for how to run OsdagBridge on any
+            platform with Python 3.11+.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Is OsdagBridge free and open source?</summary>
+          <div class="faq-body">
+            <p>Yes. OsdagBridge is licensed under the MIT License — see the
+            <a href="https://github.com/garvit000/OsdagBridge/blob/dev/LICENSE" target="_blank" rel="noopener">LICENSE</a>
+            file for full terms.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>What analysis solvers does it support?</summary>
+          <div class="faq-body">
+            <p>OsdagBridge ships a native lightweight FEM solver and integrates with OpenSeesPy and OspGrillage.
+            Solvers are switchable at runtime via adapters, so you can compare results across backends.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Which design codes are implemented?</summary>
+          <div class="faq-body">
+            <p>IRC:6–2017, IRC:22–2015, and IRC:24–2010 are implemented under
+            <code>core/utils/codes/</code>, covering load models, load combinations, material factors, and code checks.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>The Windows installer triggers a SmartScreen warning — is that expected?</summary>
+          <div class="faq-body">
+            <p>Yes, for now. The installer isn't code-signed yet, so Windows SmartScreen may flag it as unrecognized.
+            Choose <em>More info</em> → <em>Run anyway</em> to proceed. Code signing is on the roadmap.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How do I uninstall OsdagBridge?</summary>
+          <div class="faq-body">
+            <p>On Windows, use <em>Add or Remove Programs</em> or the uninstaller shortcut created during install.
+            On Linux, run the bundled <code>Uninstall-OsdagBridge.sh</code> script from the install directory.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How do I build OsdagBridge from source?</summary>
+          <div class="faq-body">
+            <p>Clone the repository and install in editable mode:</p>
+            <pre><code>git clone https://github.com/garvit000/OsdagBridge.git
+cd OsdagBridge
+pip install -e .</code></pre>
+            <p>See the <a href="installation.html">Installation page</a> for the full walkthrough.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Where do I report a bug or request a feature?</summary>
+          <div class="faq-body">
+            <p>Open an issue on the
+            <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">GitHub issue tracker</a>.
+            Please include your OS, OsdagBridge version, and steps to reproduce.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How can I contribute?</summary>
+          <div class="faq-body">
+            <p>Fork the repository, create a feature branch, make sure <code>pytest</code> passes, and open a pull
+            request. See the
+            <a href="https://github.com/garvit000/OsdagBridge/blob/dev/docs/developer_guide.md" target="_blank" rel="noopener">developer guide</a>
+            for more detail.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>OsdagBridge</strong>
+        <p>Open-source steel bridge analysis and design, part of the Osdag ecosystem.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">Report an Issue</a>
+        <a href="https://github.com/garvit000/OsdagBridge/releases" target="_blank" rel="noopener">All Releases</a>
+        <a href="https://github.com/garvit000/OsdagBridge/blob/dev/LICENSE" target="_blank" rel="noopener">License</a>
+      </div>
+    </div>
+    <p class="footer-note">© 2026 OsdagBridge Contributors · MIT License</p>
+  </footer>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

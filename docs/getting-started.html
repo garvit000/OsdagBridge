@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Getting Started — OsdagBridge</title>
+  <meta name="description" content="Quick start guide for running OsdagBridge's desktop app, web app, and CLI." />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><span class="brand-icon">🌉</span> OsdagBridge</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="installation.html">Installation</a>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="faq.html">FAQ</a>
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+        <button id="navToggle" class="icon-btn nav-toggle" aria-label="Toggle menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-header container">
+      <h1>Getting Started</h1>
+      <p>A quick tour of the desktop app, web app, and CLI — pick whichever fits your workflow.</p>
+    </div>
+
+    <section>
+      <div class="container">
+        <div class="section-title">
+          <h2>1. Launch the desktop application</h2>
+          <p>The fastest way to get productive if you installed via the Windows or Linux installer.</p>
+        </div>
+        <ol class="steps">
+          <li>
+            <h3>Open OsdagBridge</h3>
+            <p>Use the desktop shortcut created by the installer, or run it manually from a source checkout:</p>
+            <pre><code>python -m osdagbridge.desktop</code></pre>
+          </li>
+          <li>
+            <h3>Create a new bridge project</h3>
+            <p>Choose a bridge type (currently Plate Girder Bridge), then fill in the input form covering geometry, materials, and loading.</p>
+          </li>
+          <li>
+            <h3>Run the analysis</h3>
+            <p>Select an analysis backend — the native solver, OpenSeesPy, or OspGrillage — and run the analysis and design checks.</p>
+          </li>
+          <li>
+            <h3>Generate a report</h3>
+            <p>Export a full design report (PDF) once the design passes all IRC code checks.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="container">
+        <div class="section-title">
+          <h2>2. Use the command-line interface</h2>
+          <p>Ideal for scripting, batch runs, and CI pipelines.</p>
+        </div>
+        <pre><code># Run an analysis from a project definition
+osdagbridge analyze project.yaml --solver native
+
+# Generate a PDF report from the analyzed project
+osdagbridge report project.yaml report.pdf</code></pre>
+        <p>
+          Project files are plain YAML, so they're easy to version-control and diff alongside your other engineering artifacts.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-title">
+          <h2>3. Run the web application</h2>
+          <p>The Django + React stack for browser-based, multi-user access.</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>Backend</h3>
+            <pre><code>python src/osdagbridge/web/backend/manage.py runserver</code></pre>
+          </div>
+          <div class="card">
+            <h3>Frontend</h3>
+            <pre><code>cd src/osdagbridge/web/frontend
+npm install
+npm start</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt">
+      <div class="container">
+        <div class="section-title">
+          <h2>Next steps</h2>
+          <p>Dig deeper into how OsdagBridge is put together.</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="icon">🏛️</div>
+            <h3>Architecture</h3>
+            <p>How the shared core, bridge types, and components fit together.</p>
+            <div class="mt-2">
+              <a href="https://github.com/garvit000/OsdagBridge/blob/dev/docs/architecture.md" target="_blank" rel="noopener">Read the architecture guide →</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="icon">🛠️</div>
+            <h3>Developer Guide</h3>
+            <p>Contributing workflow, code locations, and testing.</p>
+            <div class="mt-2">
+              <a href="https://github.com/garvit000/OsdagBridge/blob/dev/docs/developer_guide.md" target="_blank" rel="noopener">Read the developer guide →</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="icon">📖</div>
+            <h3>User Guide</h3>
+            <p>In-depth usage notes for the desktop, web, and CLI interfaces.</p>
+            <div class="mt-2">
+              <a href="https://github.com/garvit000/OsdagBridge/blob/dev/docs/user_guide.md" target="_blank" rel="noopener">Read the user guide →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong>OsdagBridge</strong>
+        <p>Open-source steel bridge analysis and design, part of the Osdag ecosystem.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">Report an Issue</a>
+        <a href="https://github.com/garvit000/OsdagBridge/releases" target="_blank" rel="noopener">All Releases</a>
+        <a href="https://github.com/garvit000/OsdagBridge/blob/dev/LICENSE" target="_blank" rel="noopener">License</a>
+      </div>
+    </div>
+    <p class="footer-note">© 2026 OsdagBridge Contributors · MIT License</p>
+  </footer>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

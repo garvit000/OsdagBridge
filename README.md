@@ -1,7 +1,17 @@
 # OsdagBridge
 
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-2f5fd6)](https://garvit000.github.io/OsdagBridge/)
+[![Latest Release](https://img.shields.io/github/v/release/garvit000/OsdagBridge?label=latest%20release)](https://github.com/garvit000/OsdagBridge/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/garvit000/OsdagBridge/total?label=downloads)](https://github.com/garvit000/OsdagBridge/releases)
+[![License: MIT](https://img.shields.io/github/license/garvit000/OsdagBridge)](LICENSE)
+
 OsdagBridge is a modular, shared-core software plugin for the analysis and design of steel bridges within the Osdag ecosystem.  
 It supports desktop (PySide6), web (Django + React), and CLI interfaces through a unified Python core.
+
+📖 **[Documentation website](https://garvit000.github.io/OsdagBridge/)** ·
+📦 **[Latest release](https://github.com/garvit000/OsdagBridge/releases/latest)** ·
+⬇️ **[Download for Windows](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe)** ·
+⬇️ **[Download for Linux](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh)**
 
 The system currently supports:
 - Plate Girder Bridges  
@@ -76,6 +86,18 @@ OsdagBridge/
 ---
 
 ## Installation
+
+### Prebuilt Installers (recommended)
+
+Download and run the installer for your platform from the
+[latest release](https://github.com/garvit000/OsdagBridge/releases/latest):
+
+- **Windows:** [OsdagBridge-Setup.exe](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Setup.exe)
+- **Linux:** [OsdagBridge-Linux.sh](https://github.com/garvit000/OsdagBridge/releases/latest/download/OsdagBridge-Linux.sh)
+
+See the [Installation guide](https://garvit000.github.io/OsdagBridge/installation.html) for step-by-step instructions.
+
+### From Source
 
 Clone the repository:
 
