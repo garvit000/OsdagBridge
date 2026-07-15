@@ -152,10 +152,6 @@ pre code {
   text-decoration: none;
 }
 
-.brand-icon {
-  font-size: 1.3rem;
-}
-
 .nav-links {
   display: flex;
   align-items: center;
@@ -355,11 +351,6 @@ section.alt {
   box-shadow: var(--shadow-md);
 }
 
-.card .icon {
-  font-size: 1.6rem;
-  margin-bottom: 0.75rem;
-}
-
 .card h3 {
   margin: 0 0 0.5rem;
   font-size: 1.1rem;
@@ -386,10 +377,6 @@ section.alt {
   color: var(--color-text-muted);
   text-align: center;
   padding: 1rem;
-}
-
-.screenshot-placeholder .icon {
-  font-size: 2.2rem;
 }
 
 .screenshot-placeholder span.label {
