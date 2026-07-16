@@ -13,6 +13,9 @@ jobs:
   build-windows:
     name: Build Windows installer
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,23 +25,35 @@ jobs:
         with:
           auto-update-conda: true
 
-      - name: Install constructor
-        shell: bash -l {0}
-        run: |
-          conda install -y constructor
+      - name: Install build tools
+        run: conda install -y constructor conda-build
 
-      # ---------------------------------------------------------------------
-      # PLACEHOLDER: adjust to match the real build if this drifts from
-      # constructor/construct.yaml (e.g. a different channel, pinned version,
-      # or a separate packaging step that must run before constructor).
-      # ---------------------------------------------------------------------
-      - name: Build installer with constructor
-        shell: bash -l {0}
+      - name: Resolve version from tag
+        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      # Build the osdagbridge package straight from this tagged source so the
+      # installer always matches the release, instead of pulling a stale build
+      # from the remote channel. --no-test skips the recipe's import checks
+      # (already covered by the conda-publish workflow) to keep releases fast.
+      - name: Build conda package from source
         run: |
-          constructor constructor/ --output-dir dist
+          conda build conda-recipe --no-test \
+            -c osdag -c geompy -c conda-forge \
+            --output-folder "$GITHUB_WORKSPACE/local-channel"
+
+      # Prepend the freshly built package as the highest-priority channel and
+      # stamp the release version. Edited textually to preserve the # [win] /
+      # # [linux] selectors that a YAML round-trip would drop.
+      - name: Point constructor at the freshly built package
+        run: |
+          CHANNEL=$(python -c "import pathlib; print(pathlib.Path('local-channel').resolve().as_uri())")
+          sed -i "s#^version: .*#version: ${PKG_VERSION}#" constructor/construct.yaml
+          sed -i "s#^channels:#channels:\n  - ${CHANNEL}#" constructor/construct.yaml
+
+      - name: Build installer with constructor
+        run: constructor constructor/ --output-dir dist
 
       - name: Rename installer to release asset name
-        shell: bash
         run: |
           SRC=$(find dist -maxdepth 1 -iname "*.exe" | head -n 1)
           echo "Built installer: $SRC"
@@ -53,6 +68,9 @@ jobs:
   build-linux:
     name: Build Linux installer
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -62,22 +80,29 @@ jobs:
         with:
           auto-update-conda: true
 
-      - name: Install constructor
-        shell: bash -l {0}
-        run: |
-          conda install -y constructor
+      - name: Install build tools
+        run: conda install -y constructor conda-build
 
-      # ---------------------------------------------------------------------
-      # PLACEHOLDER: adjust to match the real build if this drifts from
-      # constructor/construct.yaml.
-      # ---------------------------------------------------------------------
-      - name: Build installer with constructor
-        shell: bash -l {0}
+      - name: Resolve version from tag
+        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      # See the Windows job for why we build from source here.
+      - name: Build conda package from source
         run: |
-          constructor constructor/ --output-dir dist
+          conda build conda-recipe --no-test \
+            -c osdag -c geompy -c conda-forge \
+            --output-folder "$GITHUB_WORKSPACE/local-channel"
+
+      - name: Point constructor at the freshly built package
+        run: |
+          CHANNEL=$(python -c "import pathlib; print(pathlib.Path('local-channel').resolve().as_uri())")
+          sed -i "s#^version: .*#version: ${PKG_VERSION}#" constructor/construct.yaml
+          sed -i "s#^channels:#channels:\n  - ${CHANNEL}#" constructor/construct.yaml
+
+      - name: Build installer with constructor
+        run: constructor constructor/ --output-dir dist
 
       - name: Rename installer to release asset name
-        shell: bash
         run: |
           SRC=$(find dist -maxdepth 1 -iname "*.sh" | head -n 1)
           echo "Built installer: $SRC"
