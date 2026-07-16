@@ -37,7 +37,7 @@ jobs:
       # (already covered by the conda-publish workflow) to keep releases fast.
       - name: Build conda package from source
         run: |
-          conda build conda-recipe --no-test \
+          conda-build conda-recipe --no-test \
             -c osdag -c geompy -c conda-forge \
             --output-folder "$GITHUB_WORKSPACE/local-channel"
 
@@ -89,7 +89,7 @@ jobs:
       # See the Windows job for why we build from source here.
       - name: Build conda package from source
         run: |
-          conda build conda-recipe --no-test \
+          conda-build conda-recipe --no-test \
             -c osdag -c geompy -c conda-forge \
             --output-folder "$GITHUB_WORKSPACE/local-channel"
 
