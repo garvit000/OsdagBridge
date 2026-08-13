@@ -2,15 +2,20 @@
    OsdagBridge Documentation Site — shared styles
    ========================================================================== */
 
+@import url('https://fonts.cdnfonts.com/css/aaargh');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+
 :root {
+  --font-title: "Aaargh", "Segoe UI", sans-serif;
+  --font-body: "Ubuntu", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
   --color-bg: #f7f8fb;
   --color-bg-alt: #ffffff;
   --color-surface: #ffffff;
   --color-border: #e2e5ec;
   --color-text: #1c2230;
   --color-text-muted: #5b6273;
-  --color-brand: #2f5fd6;
-  --color-brand-dark: #1f3f9c;
+  --color-brand: #7a9210;
+  --color-brand-dark: #5f720c;
   --color-brand-contrast: #ffffff;
   --color-accent: #16a085;
   --color-code-bg: #eef1f8;
@@ -28,8 +33,8 @@
   --color-border: #2a2f3d;
   --color-text: #e8eaf1;
   --color-text-muted: #a3a9bb;
-  --color-brand: #6c8fff;
-  --color-brand-dark: #97afff;
+  --color-brand: #a3c22e;
+  --color-brand-dark: #b8d454;
   --color-brand-contrast: #0c0e14;
   --color-accent: #2ed3a8;
   --color-code-bg: #1f2430;
@@ -46,8 +51,8 @@
     --color-border: #2a2f3d;
     --color-text: #e8eaf1;
     --color-text-muted: #a3a9bb;
-    --color-brand: #6c8fff;
-    --color-brand-dark: #97afff;
+    --color-brand: #a3c22e;
+    --color-brand-dark: #b8d454;
     --color-brand-contrast: #0c0e14;
     --color-accent: #2ed3a8;
     --color-code-bg: #1f2430;
@@ -67,7 +72,7 @@ html {
 
 body {
   margin: 0;
-  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   background: var(--color-bg);
   color: var(--color-text);
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -143,13 +148,19 @@ pre code {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: var(--font-title);
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   color: var(--color-text);
 }
 
 .brand:hover {
   text-decoration: none;
+}
+
+.brand-title {
+  font-family: var(--font-title);
+  font-size: 1.15rem;
 }
 
 .nav-links {
