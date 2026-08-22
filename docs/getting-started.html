@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Getting Started — OsdagBridge</title>
-  <meta name="description" content="Quick start guide for running OsdagBridge's desktop app, web app, and CLI." />
+  <meta name="description" content="Quick start guide for running OsdagBridge's desktop app, plus a preview of the upcoming CLI and web interfaces." />
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="icon" type ="image/svg+xml" href="assets/images/osdag_logo.png"/>
 </head>
@@ -30,7 +30,7 @@
   <main>
     <div class="page-header container">
       <h1>Getting Started</h1>
-      <p>A quick tour of the desktop app, web app, and CLI — pick whichever fits your workflow.</p>
+      <p>A quick tour of the desktop app, plus a preview of the upcoming CLI and web interfaces.</p>
     </div>
 
     <section>
@@ -51,7 +51,7 @@
           </li>
           <li>
             <h3>Run the analysis</h3>
-            <p>Select an analysis backend — the native solver, OpenSeesPy, or OspGrillage — and run the analysis and design checks.</p>
+            <p>Hit the design button and let the native solver (OpenSeesPy), or OspGrillage do the heavy lifting for the analysis and design checks.</p>
           </li>
           <li>
             <h3>Generate a report</h3>
@@ -64,16 +64,20 @@
     <section class="alt">
       <div class="container">
         <div class="section-title">
-          <h2>2. Use the command-line interface</h2>
-          <p>Ideal for scripting, batch runs, and CI pipelines.</p>
+          <h2>2. Command-Line Interface <span class="badge-soon">Coming Soon</span></h2>
+          <p>A headless CLI designed for scripting, batch runs, and automated CI pipelines.</p>
         </div>
-        <pre><code># Run an analysis from a project definition
+        <div class="callout info">
+          <strong>In Active Development</strong>
+          The standalone command-line interface is currently being stabilized and will be available in an upcoming release. Below is a preview of the planned workflow.
+        </div>
+        <pre><code># Run an analysis from a project definition (preview)
 osdagbridge analyze project.yaml --solver native
 
-# Generate a PDF report from the analyzed project
+# Generate a PDF report from the analyzed project (preview)
 osdagbridge report project.yaml report.pdf</code></pre>
         <p>
-          Project files are plain YAML, so they're easy to version-control and diff alongside your other engineering artifacts.
+          Project files will be plain YAML, making them easy to version-control and diff alongside your other engineering artifacts.
         </p>
       </div>
     </section>
@@ -81,17 +85,23 @@ osdagbridge report project.yaml report.pdf</code></pre>
     <section>
       <div class="container">
         <div class="section-title">
-          <h2>3. Run the web application</h2>
-          <p>The Django + React stack for browser-based, multi-user access.</p>
+          <h2>3. Web Application <span class="badge-soon">Coming Soon</span></h2>
+          <p>The Django + React stack planned for browser-based, multi-user access.</p>
+        </div>
+        <div class="callout info">
+          <strong>In Active Development</strong>
+          The web application frontend and backend are currently under development and will be released in a future update.
         </div>
         <div class="grid">
           <div class="card">
-            <h3>Backend</h3>
-            <pre><code>python src/osdagbridge/web/backend/manage.py runserver</code></pre>
+            <h3>Backend (Django)</h3>
+            <p>REST API serving the core bridge computation routines.</p>
+            <pre class="mt-2"><code>python src/osdagbridge/web/backend/manage.py runserver</code></pre>
           </div>
           <div class="card">
-            <h3>Frontend</h3>
-            <pre><code>cd src/osdagbridge/web/frontend
+            <h3>Frontend (React)</h3>
+            <p>Interactive web UI with 3D bridge visualization.</p>
+            <pre class="mt-2"><code>cd src/osdagbridge/web/frontend
 npm install
 npm start</code></pre>
           </div>
