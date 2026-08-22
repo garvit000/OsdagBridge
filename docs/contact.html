@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact Us — OsdagBridge</title>
+  <meta name="description" content="Get in touch with the OsdagBridge and Osdag development teams at FOSSEE, IIT Bombay." />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/images/osdag_logo.png" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><img src="assets/images/osdag_logo.png" alt="osdag logo" width="30" height="30"></img>OsdagBridge</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="installation.html">Installation</a>
+        <a href="getting-started.html">Getting Started</a>
+        <a href="faq.html">FAQ</a>
+        <a href="contact.html">Contact</a>
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+        <button id="navToggle" class="icon-btn nav-toggle" aria-label="Toggle menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-header container">
+      <h1>Contact Us</h1>
+      <p>Have questions, feedback, or want to collaborate on OsdagBridge? We would love to hear from you.</p>
+    </div>
+
+    <section>
+      <div class="container">
+        <div class="contact-layout">
+          <!-- Left Column: Contact Channels -->
+          <div class="contact-card-grid">
+            <div class="contact-card">
+              <div class="contact-card-icon">✉️</div>
+              <div class="contact-card-content">
+                <h3>Direct Email</h3>
+                <p>For general inquiries, feedback, and institutional questions regarding the Osdag ecosystem.</p>
+                <a class="contact-link" href="mailto:contact-osdag@fossee.in">contact-osdag@fossee.in →</a>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <div class="contact-card-icon">🐞</div>
+              <div class="contact-card-content">
+                <h3>Issue Tracker &amp; Bugs</h3>
+                <p>Found a bug or need a specific bridge feature? Open a ticket on GitHub.</p>
+                <a class="contact-link" href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">GitHub Issues →</a>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <div class="contact-card-icon">💬</div>
+              <div class="contact-card-content">
+                <h3>Community &amp; Discussions</h3>
+                <p>Ask technical questions, participate in design discussions, and connect with other users.</p>
+                <a class="contact-link" href="https://github.com/garvit000/OsdagBridge/discussions" target="_blank" rel="noopener">GitHub Discussions →</a>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <div class="contact-card-icon">🎓</div>
+              <div class="contact-card-content">
+                <h3>Research &amp; Collaboration</h3>
+                <p>Partner with FOSSEE and IIT Bombay for academic research, bridge benchmarks, or student projects.</p>
+                <a class="contact-link" href="https://osdag.fossee.in" target="_blank" rel="noopener">Osdag Main Project →</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive Message Composer -->
+          <div class="form-box">
+            <h2>Send a Message</h2>
+            <p class="form-subtitle">Compose your query below. You can send it directly through your mail client or copy the formatted text.</p>
+
+            <form id="contactForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="senderName">Your Name *</label>
+                  <input type="text" id="senderName" class="form-control" placeholder="e.g. Jane Doe" required />
+                </div>
+                <div class="form-group">
+                  <label for="senderEmail">Your Email *</label>
+                  <input type="email" id="senderEmail" class="form-control" placeholder="name@example.com" required />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="msgCategory">Topic Category</label>
+                  <select id="msgCategory" class="form-control">
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Bug Report / Solver Issue">Bug Report / Solver Issue</option>
+                    <option value="Feature Suggestion">Feature Suggestion</option>
+                    <option value="IRC Code Compliance">IRC Code Compliance</option>
+                    <option value="Academic / Research Collaboration">Academic / Research Collaboration</option>
+                    <option value="Contributing Code">Contributing Code</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="msgSubject">Subject *</label>
+                  <input type="text" id="msgSubject" class="form-control" placeholder="Brief subject line" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="msgContent">Message *</label>
+                <textarea id="msgContent" class="form-control" rows="5" placeholder="Describe your question, request, or issue with relevant details (OS, solver used, bridge type, etc.)..." required></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="btnSendEmail">
+                  ✉️ Open in Email Client
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnCopyMessage">
+                  📋 Copy Message Draft
+                </button>
+              </div>
+
+              <div id="formStatus" class="status-box"></div>
+              <p class="form-notice">
+                Messages are routed to <strong>contact-osdag@fossee.in</strong>. For reproducible code bugs, attaching logs or opening a <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">GitHub Issue</a> is recommended.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Location & Project Info -->
+    <section class="alt">
+      <div class="container">
+        <div class="section-title">
+          <h2>Project &amp; Location</h2>
+          <p>OsdagBridge is developed under the FOSSEE project at IIT Bombay.</p>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>FOSSEE Project</h3>
+            <p>Free and Open Source Software for Education (FOSSEE) is developed at the Indian Institute of Technology Bombay, funded by the Ministry of Education, Government of India.</p>
+            <div class="mt-2">
+              <a href="https://fossee.in" target="_blank" rel="noopener">Visit fossee.in →</a>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Osdag Initiative</h3>
+            <p>Osdag promotes open-source cross-platform structural steel design tools, empowering civil and structural engineers, educators, and researchers worldwide.</p>
+            <div class="mt-2">
+              <a href="https://osdag.fossee.in" target="_blank" rel="noopener">Visit osdag.fossee.in →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <strong class="brand-title">OsdagBridge</strong>
+        <p>Open-source steel girder bridge analysis and design, part of the Osdag ecosystem for structural engineering education, research, and practice.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/garvit000/OsdagBridge" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/garvit000/OsdagBridge/issues" target="_blank" rel="noopener">Report an Issue</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="https://github.com/garvit000/OsdagBridge/releases" target="_blank" rel="noopener">All Releases</a>
+        <a href="https://github.com/garvit000/OsdagBridge/blob/dev/LICENSE" target="_blank" rel="noopener">License</a>
+      </div>
+    </div>
+    <p class="footer-note">© 2026 OsdagBridge Contributors · MIT License</p>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script>
+    (function () {
+      var contactForm = document.getElementById("contactForm");
+      var btnCopy = document.getElementById("btnCopyMessage");
+      var statusBox = document.getElementById("formStatus");
+
+      function formatDraft() {
+        var name = document.getElementById("senderName").value.trim();
+        var email = document.getElementById("senderEmail").value.trim();
+        var category = document.getElementById("msgCategory").value;
+        var subject = document.getElementById("msgSubject").value.trim();
+        var message = document.getElementById("msgContent").value.trim();
+
+        var fullSubject = "[OsdagBridge] [" + category + "] " + (subject || "Inquiry");
+        var body = "Name: " + name + "\n" +
+                   "Email: " + email + "\n" +
+                   "Category: " + category + "\n\n" +
+                   "Message:\n" + message + "\n\n" +
+                   "---\nSent via OsdagBridge Docs Contact Form";
+
+        return { fullSubject: fullSubject, body: body, name: name, email: email, message: message };
+      }
+
+      function showStatus(text, type) {
+        statusBox.className = "status-box " + type;
+        statusBox.textContent = text;
+        statusBox.style.display = "block";
+      }
+
+      if (contactForm) {
+        contactForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var draft = formatDraft();
+          if (!draft.name || !draft.email || !draft.message) {
+            showStatus("Please fill in all required fields (Name, Email, Subject, Message).", "info");
+            return;
+          }
+
+          var mailtoUrl = "mailto:contact-osdag@fossee.in?subject=" +
+            encodeURIComponent(draft.fullSubject) +
+            "&body=" + encodeURIComponent(draft.body);
+
+          showStatus("Launching your email client...", "success");
+          window.location.href = mailtoUrl;
+        });
+      }
+
+      if (btnCopy) {
+        btnCopy.addEventListener("click", function () {
+          var draft = formatDraft();
+          if (!draft.message) {
+            showStatus("Please write a message before copying.", "info");
+            return;
+          }
+
+          var clipboardText = "To: contact-osdag@fossee.in\n" +
+                              "Subject: " + draft.fullSubject + "\n\n" +
+                              draft.body;
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(clipboardText).then(function () {
+              showStatus("✓ Message draft copied to clipboard! You can paste it into any email or chat client.", "success");
+            }).catch(function () {
+              showStatus("Unable to automatically copy. Please select and copy manually.", "info");
+            });
+          } else {
+            showStatus("Clipboard API not available. Please send directly using 'Open in Email Client'.", "info");
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
